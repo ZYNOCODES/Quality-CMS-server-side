@@ -1,0 +1,84 @@
+const jwt = require('jsonwebtoken');
+const User = require('../model/UserModel');
+const Store = require('../model/StoreModel');
+const Admin = require('../model/AdminModel');
+const SubscriptionStore = require('../model/SubscriptionStoreModel');
+const CustomError = require('../util/CustomError');
+const asyncErrorHandler = require('../util/asyncErrorHandler');
+const moment = require('moment');
+require('moment-timezone');
+
+const requireAuth = asyncErrorHandler(async (req, res, next) => {
+    const timezone = 'Africa/Algiers';
+    const currentTime = moment.tz(timezone);
+    // Check if User is logged in
+    const {authorization} = req.headers;
+    
+    if(!authorization){
+        // If User is not logged in, return error
+        const err = new CustomError('authorization token is required', 401);
+        return next(err);
+    }
+    // Get token from header
+    const token = authorization.split(' ')[1];
+
+    // Verify token
+    let decodedToken;
+    try {
+        decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+    } catch (err) {
+        const error = new CustomError('Invalid or expired token. Please log in again.', 401);
+        return next(error);
+    }
+
+    const { id, type, exp } = decodedToken;
+    // Check if the token has expired
+    if (currentTime.isSameOrAfter(exp * 1000)) {
+        const err = new CustomError('Token has expired. Please log in again.', 401);
+        return next(err);
+    }
+    // Add User to request
+    if(type == 'CLIENT_API'){
+        req.user = await User.findById(id);
+    }else if(type == 'ADMIN_API'){
+        req.user = await Admin.findById(id);
+    }else if(type == 'STORE_API'){
+        req.user = await Store.findById(id);
+        // Check if the store was found
+        if (!req.user) {
+            const err = new CustomError('Store not found', 404);
+            return next(err);
+        }
+        //check if subscription is still valid
+        if(req.user.subscriptions.length > 0 ){
+            //get subscription details
+            const subscription = await SubscriptionStore.findById(
+                req.user.subscriptions[req.user.subscriptions.length - 1]
+            );
+            if(!subscription){
+                const err = new CustomError('Subscription not found', 404);
+                return next(err);
+            }
+            //check if subscription has expired
+            if(currentTime.isSameOrAfter(subscription.expiryDate)){
+                //update Store status to suspended
+                await Store.updateOne({ _id: id }, { status: 'Suspended' });
+                const err = new CustomError('Subscription has expired', 401);
+                return next(err);
+            }
+        }else{
+            const err = new CustomError('No subscription exists for this profile', 401);
+            return next(err);
+        }
+    }else{
+        const err = new CustomError('Authentication rejected', 404);
+        return next(err);
+    }
+    if(!req.user){
+        const err = new CustomError('Authentication rejected', 404);
+        return next(err);
+    }
+    // Continue to next middleware
+    next();
+});
+module.exports = requireAuth;
