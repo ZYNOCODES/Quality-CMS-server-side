@@ -7,9 +7,14 @@ const ErrorHandler = require('./controller/ErrorController');
 //security
 const cors = require('cors');
 const limiter = require('./middleware/RateLimiting');
-const validateRequest = require('./middleware/Sanitize');
 //routes
 const AuthRoutes = require('./route/AuthRoutes');
+const ActionRoutes = require('./route/ActionRoutes');
+const FamilyRoutes = require('./route/FamilyRoutes');
+const PieceRoutes = require('./route/PieceRoutes');
+const WorkshopRoutes = require('./route/WorkshopRoutes');
+const ZoneRoutes = require('./route/ZoneRoutes');
+
 
 
 //http server
@@ -29,12 +34,15 @@ app.use('/files', express.static('./files'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: false }));
 //RateLimiting
-//app.use(limiter);
-//Sanitize
-app.use(validateRequest);
+app.use(limiter);
 
 //routes
-app.use('/auth', AuthRoutes);
+app.use('/api/auth', AuthRoutes);
+app.use('/api/action', ActionRoutes);
+app.use('/api/family', FamilyRoutes);
+app.use('/api/piece', PieceRoutes);
+app.use('/api/workshop', WorkshopRoutes);
+app.use('/api/zone', ZoneRoutes);
 
 //error handling
 app.use(ErrorHandler);

@@ -1,20 +1,16 @@
 const jwt = require('jsonwebtoken');
-const User = require('../model/UserModel');
-const Store = require('../model/StoreModel');
-const Admin = require('../model/AdminModel');
-const SubscriptionStore = require('../model/SubscriptionStoreModel');
+const AccessAgent = require('../model/AccessAgentModel.js');
+const Technician = require('../model/TechnicianModel.js');
+const Manager = require('../model/ManagerModel.js');
 const CustomError = require('../util/CustomError');
 const asyncErrorHandler = require('../util/asyncErrorHandler');
 const moment = require('moment');
 require('moment-timezone');
 
 const requireAuth = asyncErrorHandler(async (req, res, next) => {
-    const timezone = 'Africa/Algiers';
-    const currentTime = moment.tz(timezone);
-    // Check if User is logged in
     const {authorization} = req.headers;
     
-    if(!authorization){
+    if(!authorization || !authorization.startsWith('Bearer ')){
         // If User is not logged in, return error
         const err = new CustomError('authorization token is required', 401);
         return next(err);
@@ -33,51 +29,35 @@ const requireAuth = asyncErrorHandler(async (req, res, next) => {
 
     const { id, type, exp } = decodedToken;
     // Check if the token has expired
+    const timezone = 'Africa/Algiers';
+    const currentTime = moment.tz(timezone);
     if (currentTime.isSameOrAfter(exp * 1000)) {
         const err = new CustomError('Token has expired. Please log in again.', 401);
         return next(err);
     }
-    // Add User to request
-    if(type == 'CLIENT_API'){
-        req.user = await User.findById(id);
-    }else if(type == 'ADMIN_API'){
-        req.user = await Admin.findById(id);
-    }else if(type == 'STORE_API'){
-        req.user = await Store.findById(id);
-        // Check if the store was found
-        if (!req.user) {
-            const err = new CustomError('Store not found', 404);
-            return next(err);
-        }
-        //check if subscription is still valid
-        if(req.user.subscriptions.length > 0 ){
-            //get subscription details
-            const subscription = await SubscriptionStore.findById(
-                req.user.subscriptions[req.user.subscriptions.length - 1]
-            );
-            if(!subscription){
-                const err = new CustomError('Subscription not found', 404);
-                return next(err);
-            }
-            //check if subscription has expired
-            if(currentTime.isSameOrAfter(subscription.expiryDate)){
-                //update Store status to suspended
-                await Store.updateOne({ _id: id }, { status: 'Suspended' });
-                const err = new CustomError('Subscription has expired', 401);
-                return next(err);
-            }
-        }else{
-            const err = new CustomError('No subscription exists for this profile', 401);
-            return next(err);
-        }
-    }else{
-        const err = new CustomError('Authentication rejected', 404);
-        return next(err);
+    // Retrieve user based on type in a single call
+    let user;
+    switch (type) {
+        case process.env.MANAGER_TYPE:
+            user = await Manager.findByPk(id);
+            break;
+        case process.env.AGENT_TYPE:
+            user = await AccessAgent.findByPk(id);
+            break;
+        case process.env.TECHNICIAN_TYPE:
+            user = await Technician.findByPk(id);
+            break;
+        default:
+            return next(new CustomError('Authentication rejected', 401));
     }
-    if(!req.user){
-        const err = new CustomError('Authentication rejected', 404);
-        return next(err);
+    // Check if user exists
+    if (!user) {
+        return next(new CustomError('Authentication rejected', 401));
     }
+
+    // Add user to request
+    req.user = user;
+
     // Continue to next middleware
     next();
 });

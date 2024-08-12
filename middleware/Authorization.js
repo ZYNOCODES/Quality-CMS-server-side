@@ -1,0 +1,30 @@
+const jwt = require('jsonwebtoken');
+const CustomError = require('../util/CustomError');
+const asyncErrorHandler = require('../util/asyncErrorHandler');
+
+const checkAuthorization = (allowedTypes) => {
+    return asyncErrorHandler(async (req, res, next) => {
+        const {authorization} = req.headers;
+
+        if (!authorization || !authorization.startsWith('Bearer ')) {
+            return next(new CustomError('Authorization token is required', 400));
+        }
+
+        const token = authorization.split(' ')[1];
+        
+        try {
+            const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+            const userType = decodedToken.type;
+            //check if user type is allowed
+            if (!allowedTypes.includes(userType)) {
+                return next(new CustomError('Unauthorized access. You do not have permission to access this resource.', 403));
+            }
+            // User type is allowed, continue
+            next();
+        } catch (error) {
+            return next(new CustomError('Invalid or expired token.', 401));
+        }
+    });
+};
+
+module.exports = checkAuthorization;
