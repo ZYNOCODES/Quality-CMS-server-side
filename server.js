@@ -14,8 +14,8 @@ const FamilyRoutes = require('./route/FamilyRoutes');
 const PieceRoutes = require('./route/PieceRoutes');
 const WorkshopRoutes = require('./route/WorkshopRoutes');
 const ZoneRoutes = require('./route/ZoneRoutes');
-
-
+const ProductRoutes = require('./route/ProductRoutes');
+const PanneRoutes = require('./route/PanneRoutes');
 
 //http server
 const http = require('http');
@@ -43,6 +43,8 @@ app.use('/api/family', FamilyRoutes);
 app.use('/api/piece', PieceRoutes);
 app.use('/api/workshop', WorkshopRoutes);
 app.use('/api/zone', ZoneRoutes);
+app.use('/api/product', ProductRoutes);
+app.use('/api/panne', PanneRoutes);
 
 //error handling
 app.use(ErrorHandler);

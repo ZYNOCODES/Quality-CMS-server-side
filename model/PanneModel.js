@@ -1,5 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
+const Product = require('./ProductModel');
+const Workshop = require('./WorkshopModel');
+const Technician = require('./TechnicianModel');
 
 const Panne = sequelize.define('panne', {
     id: {
@@ -30,7 +33,8 @@ const Panne = sequelize.define('panne', {
     },
     technician: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: null,
         references: {
             model: 'technician',
             key: 'id'
@@ -38,7 +42,8 @@ const Panne = sequelize.define('panne', {
     },
     workshop: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: null,
         references: {
             model: 'workshop',
             key: 'id'
@@ -92,6 +97,22 @@ const Panne = sequelize.define('panne', {
 }, {
     freezeTableName: true,
     timestamps: false,
+});
+
+// Define associations
+Panne.belongsTo(Technician, {
+    foreignKey: 'technician',
+    as: 'technicianAssociation'
+});
+
+Panne.belongsTo(Workshop, {
+    foreignKey: 'workshop',
+    as: 'workshopAssociation'
+});
+
+Panne.belongsTo(Product, {
+    foreignKey: 'product',
+    as: 'productAssociation'
 });
 
 module.exports = Panne;

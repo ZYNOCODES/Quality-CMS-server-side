@@ -11,7 +11,16 @@ const findActionCorrectiveByAction = async (action) => {
         raw: true
     })
 };
+const findActionCorrectiveByPanne = async (panne) => {
+    return await ActionCorrective.findOne({
+        where: {
+            panne
+        },
+        raw: true
+    })
+};
 module.exports = {
     findActionCorrectiveById,
-    findActionCorrectiveByAction
+    findActionCorrectiveByAction,
+    findActionCorrectiveByPanne
 }

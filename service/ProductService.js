@@ -3,6 +3,13 @@ const Product = require('../model/ProductModel');
 const findProductById = async (id) => {
     return await Product.findByPk(id);
 };
+const findProductByCode = async (code) => {
+    return await Product.findOne({
+        where: {
+            code
+        },
+    })
+};
 const findProductByFamily = async (family) => {
     return await Product.findOne({
         where: {
@@ -19,8 +26,18 @@ const findProductByZone = async (zone) => {
         raw: true
     })
 };
+const findProductByModel = async (model) => {
+    return await Product.findOne({
+        where: {
+            model
+        },
+        raw: true
+    })
+};
 module.exports = {
     findProductById,
     findProductByFamily,
-    findProductByZone
+    findProductByZone,
+    findProductByCode,
+    findProductByModel
 }

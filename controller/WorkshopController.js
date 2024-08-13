@@ -1,4 +1,5 @@
 const Workshop = require('../model/WorkshopModel.js');
+const Zone = require('../model/ZoneModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const validator = require('validator');
@@ -8,7 +9,39 @@ const ZoneService = require('../service/ZoneService.js');
 
 //get all Workshops
 const GetAllWorkshops = asyncErrorHandler(async (req, res, next) => {
-    const Workshops = await Workshop.findAll();
+    const Workshops = await Workshop.findAll({
+        include: [
+            {
+                model: Zone,
+                as: 'zoneAssociation'
+            }
+        ]
+    });
+    //check if there are Workshops
+    if (Workshops.length < 1) {
+        return next(new CustomError('Aucune atelier trouvée', 404));
+    }
+    res.status(200).json(Workshops);
+});
+//get all Workshops by zone
+const GetAllWorkshopsByZone = asyncErrorHandler(async (req, res, next) => {
+    const { zone } = req.params;
+    //check if the zone is provided
+    if ([zone].some(field => !field || validator.isEmpty(field))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    //get all Products
+    const Workshops = await Workshop.findAll({
+        where: {
+            zone
+        },
+        include: [
+            {
+                model: Zone,
+                as: 'zoneAssociation'
+            }
+        ]
+    });
     //check if there are Workshops
     if (Workshops.length < 1) {
         return next(new CustomError('Aucune atelier trouvée', 404));
@@ -108,7 +141,7 @@ const DeleteWorkshop = asyncErrorHandler(async (req, res, next) => {
     //check if there is consommation related to this Workshop
     const Panne = await PanneService.findPanneByWorkshop(existWorkshop.id);
     if(Panne){
-        return next(new CustomError('Vous ne pouvez pas supprimer ce atelier car elle est liée à un panne existante.', 400));
+        return next(new CustomError('Vous ne pouvez pas supprimer ce atelier car elle est liée à une panne existante.', 400));
     }
     //deletec Workshop
     const deletedWorkshop = await existWorkshop.destroy();
@@ -121,6 +154,7 @@ const DeleteWorkshop = asyncErrorHandler(async (req, res, next) => {
 
 module.exports = {
     GetAllWorkshops,
+    GetAllWorkshopsByZone,
     CreateWorkshop,
     UpdateWorkshop,
     DeleteWorkshop

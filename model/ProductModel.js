@@ -1,5 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
+const Family = require('./FamilyModel');
+const Zone = require('./ZoneModel');
 
 const Product = sequelize.define('product', {
     id: {
@@ -8,9 +10,10 @@ const Product = sequelize.define('product', {
         allowNull: false,
         autoIncrement: true,
     },
-    code:{
+    code: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
     },
     marque: {
         type: DataTypes.STRING,
@@ -42,9 +45,20 @@ const Product = sequelize.define('product', {
             key: 'id'
         }
     }
-},{
+}, {
     freezeTableName: true,
     timestamps: false,
+});
+
+// Define associations
+Product.belongsTo(Family, {
+    foreignKey: 'family',
+    as: 'familyAssociation'
+});
+
+Product.belongsTo(Zone, {
+    foreignKey: 'zone',
+    as: 'zoneAssociation'
 });
 
 module.exports = Product;

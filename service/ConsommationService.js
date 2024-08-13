@@ -11,7 +11,16 @@ const findConsommationByPiece = async (piece) => {
         raw: true
     })
 };
+const findConsommationByPanne = async (panne) => {
+    return await Consommation.findOne({
+        where: {
+            panne
+        },
+        raw: true
+    })
+};
 module.exports = {
     findConsommationById,
-    findConsommationByPiece
+    findConsommationByPiece,
+    findConsommationByPanne
 }

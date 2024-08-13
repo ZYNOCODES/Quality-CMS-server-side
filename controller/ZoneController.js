@@ -97,7 +97,7 @@ const DeleteZone = asyncErrorHandler(async (req, res, next) => {
     if (!existZone) {
         return next(new CustomError('Zone non trouvée', 404));
     }
-    //check if there is consommation related to this Zone
+    //check if there is workshops and products related to this Zone
     const Workshop = await WorkshopService.findWorkshopByZone(existZone.id);
     const Product = await ProductService.findProductByZone(existZone.id);
     if(Workshop || Product){
@@ -105,7 +105,7 @@ const DeleteZone = asyncErrorHandler(async (req, res, next) => {
     }
     //deletec Zone
     const deletedZone = await existZone.destroy();
-    //check if Zone is updated
+    //check if Zone is deleted
     if (!deletedZone) {
         return next(new CustomError('Un problème est survenu lors de la suppression d\'une zone, veuillez réessayer.', 400));
     }

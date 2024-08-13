@@ -11,7 +11,16 @@ const findWorkshopByZone = async (zone) => {
         raw: true
     })
 };
+const findAllWorkshopsByZone = async (zone) => {
+    return await Workshop.findAll({
+        where: {
+            zone
+        },
+        raw: true
+    })
+};
 module.exports = {
     findWorkshopById,
-    findWorkshopByZone
+    findWorkshopByZone,
+    findAllWorkshopsByZone
 }

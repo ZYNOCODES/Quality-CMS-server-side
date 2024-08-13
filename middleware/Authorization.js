@@ -16,7 +16,7 @@ const checkAuthorization = (allowedTypes) => {
             const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
             const userType = decodedToken.type;
             //check if user type is allowed
-            if (!allowedTypes.includes(userType)) {
+            if (!Array.isArray(allowedTypes) ||!allowedTypes.includes(userType)) {
                 return next(new CustomError('Unauthorized access. You do not have permission to access this resource.', 403));
             }
             // User type is allowed, continue

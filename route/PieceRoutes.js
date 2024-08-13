@@ -13,12 +13,12 @@ const checkAuthorization = require('../middleware/Authorization.js');
 router.use(requireAuth);
 //MANAGER ROUTES
 //get all pieces
-router.get('/', checkAuthorization(process.env.MANAGER_TYPE), GetAllPieces);
+router.get('/', checkAuthorization([process.env.MANAGER_TYPE]), GetAllPieces);
 //create a new piece
-router.post('/', checkAuthorization(process.env.MANAGER_TYPE), CreatePiece);
+router.post('/', checkAuthorization([process.env.MANAGER_TYPE]), CreatePiece);
 //update piece
-router.patch('/:code', checkAuthorization(process.env.MANAGER_TYPE), UpdatePiece);
+router.patch('/:code', checkAuthorization([process.env.MANAGER_TYPE]), UpdatePiece);
 //delete piece
-router.delete('/:code', checkAuthorization(process.env.MANAGER_TYPE), DeletePiece);
+router.delete('/:code', checkAuthorization([process.env.MANAGER_TYPE]), DeletePiece);
 
 module.exports = router;

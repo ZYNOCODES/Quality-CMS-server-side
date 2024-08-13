@@ -13,12 +13,12 @@ const checkAuthorization = require('../middleware/Authorization.js');
 router.use(requireAuth);
 //MANAGER ROUTES
 //get all familys
-router.get('/', checkAuthorization(process.env.MANAGER_TYPE), GetAllFamilies);
+router.get('/', checkAuthorization([process.env.MANAGER_TYPE]), GetAllFamilies);
 //create a new family
-router.post('/', checkAuthorization(process.env.MANAGER_TYPE), CreateFamily);
+router.post('/', checkAuthorization([process.env.MANAGER_TYPE]), CreateFamily);
 //update family
-router.patch('/:code', checkAuthorization(process.env.MANAGER_TYPE), UpdateFamily);
+router.patch('/:code', checkAuthorization([process.env.MANAGER_TYPE]), UpdateFamily);
 //delete family
-router.delete('/:code', checkAuthorization(process.env.MANAGER_TYPE), DeleteFamily);
+router.delete('/:code', checkAuthorization([process.env.MANAGER_TYPE]), DeleteFamily);
 
 module.exports = router;

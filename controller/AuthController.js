@@ -1,10 +1,11 @@
+const { Op } = require('sequelize');
+const validator = require('validator');
 const AccessAgent = require('../model/AccessAgentModel.js');
 const Technician = require('../model/TechnicianModel.js');
 const Manager = require('../model/ManagerModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
-const validator = require('validator');
-const { Op } = require('sequelize');
+const { generateUniqueCode } = require('../util/Codification.js');
 const {
     createToken
 } = require('../util/JWT.js');
@@ -12,8 +13,6 @@ const {
     hashPassword,
     comparePassword
 } = require('../util/bcrypt.js');
-const moment = require('moment');
-require('moment-timezone');
 
 //login
 const SignIn = asyncErrorHandler(async (req, res, next) => {
@@ -44,7 +43,7 @@ const SignIn = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Identifiant ou mot de passe invalide', 400));
     }
     // Generate JWT token
-    const token = createToken(user.id, user.role);
+    const token = createToken(user.id, user.role, user.code);
 
     // Return token
     res.status(200).json({ token });
@@ -64,21 +63,40 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
     let user;
     switch (role) {
         case 'agent':
+            // Generate a unique code for the product
+            const codeAA = await generateUniqueCode("AA", 6, AccessAgent);
+            if (!codeAA) {
+                return next(new CustomError('Erreur lors de la création d\'un utilisateur, veuillez réessayer.', 400));
+            }
+
             user = await AccessAgent.create({
+                code: codeAA,
                 username,
                 password: hashedPassword,
                 phoneNumber
             });
             break;
         case 'technician':
+            // Generate a unique code for the product
+            const codeT = await generateUniqueCode("T", 6, Technician);
+            if (!codeT) {
+                return next(new CustomError('Erreur lors de la création d\'un utilisateur, veuillez réessayer.', 400));
+            }
             user = await Technician.create({
+                code: codeT,
                 username,
                 password: hashedPassword,
                 phoneNumber
             });
             break;
         case 'manager':
+            // Generate a unique code for the product
+            const codeM = await generateUniqueCode("M", 6, Manager);
+            if (!codeM) {
+                return next(new CustomError('Erreur lors de la création d\'un utilisateur, veuillez réessayer.', 400));
+            }
             user = await Manager.create({
+                code: codeM,
                 username,
                 password: hashedPassword,
                 phoneNumber
