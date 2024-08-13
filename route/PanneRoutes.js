@@ -7,7 +7,8 @@ const {
     secondPanneStep,
     thirdPanneStep,
     fourthPanneStep,
-    DeletePanne
+    DeletePanne,
+    GetPannesByProduct
 } = require('../controller/PanneController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
@@ -18,6 +19,8 @@ router.use(requireAuth);
 //SHARED ROUTES
 // get all pannes by zone
 router.get('/byzone/:code', checkAuthorization([process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), getAllPannesByZone);
+// get all pannes by product
+router.get('/byproduct/:code', checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE]), GetPannesByProduct);
 
 //AGENT ROUTES
 //create a new panne

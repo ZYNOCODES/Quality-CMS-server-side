@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
+const Action = require('../model/ActionModel.js');
 
 const Actioncorrective = sequelize.define('actioncorrective', {
     id: {
@@ -35,14 +36,22 @@ const Actioncorrective = sequelize.define('actioncorrective', {
     mesure: {
         type: DataTypes.STRING,
         allowNull: true,
+        defaultValue: null,
     },
     resultat: {
         type: DataTypes.TEXT,
         allowNull: true,
+        defaultValue: null,
     },
 },{
     freezeTableName: true,
     timestamps: false,
+});
+
+// Define associations
+Actioncorrective.belongsTo(Action, {
+    foreignKey: 'action',
+    as: 'actionAssociation'
 });
 
 module.exports = Actioncorrective;

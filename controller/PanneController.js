@@ -3,6 +3,7 @@ const validator = require('validator');
 const Panne = require('../model/PanneModel.js');
 const Product = require('../model/ProductModel.js');
 const Workshop = require('../model/WorkshopModel.js');
+const Technician = require('../model/TechnicianModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const { generateUniqueCode } = require('../util/Codification.js');
@@ -242,6 +243,11 @@ const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
     }
+
+    //check if the panne is submitted to second scan
+    if(!existingPanne.technician && !existingPanne.tempInitial){
+        return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
+    }
     
     //update the panne 
     if (source) existingPanne.source = source;
@@ -273,14 +279,19 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Panne non trouvée', 404));
     }
 
-    //make sure that the panne is ready to be closed
-    if([
-            existingPanne.product, 
-            existingPanne.technician,
-            existingPanne.dateDeclaration
-        ].some(field => !field || validator.isEmpty(field.toString()))){
-        return next(new CustomError('Tous les champs obligatoires doivent être remplis avant de clôturé la panne', 400));
+    //check if the panne is submitted to second scan
+    if(!existingPanne.technician && !existingPanne.tempInitial){
+        return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
     }
+
+    // //make sure that the panne is ready to be closed
+    // if([
+    //         existingPanne.product, 
+    //         existingPanne.technician,
+    //         existingPanne.dateDeclaration
+    //     ].some(field => !field || validator.isEmpty(field.toString()))){
+    //     return next(new CustomError('Tous les champs obligatoires doivent être remplis avant de clôturé la panne', 400));
+    // }
 
     //check if the panne is already have action corrective and consommation
     const existingConsommation = await ConsommationService.findConsommationByPanne(existingPanne.id);
@@ -296,14 +307,23 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
     
     // Get the current date and time
     const dateReparation = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
-    
-    //calculat duree
-    const duree = moment(dateReparation).diff(moment(existingPanne.tempInitial), 'minutes');
+    //check if dateReparation is greater than existingPanne.tempInitial
+    if(moment(dateReparation, "YYYY-MM-DD HH:mm:ss").isBefore(moment(existingPanne.tempInitial, "YYYY-MM-DD HH:mm:ss"))){
+        return next(new CustomError('La date de réparation doit être supérieure à la date d\'intervention', 400));
+    }
+    // Calculate the difference in milliseconds
+    let dureeInMilliseconds = moment(dateReparation, "YYYY-MM-DD HH:mm:ss").diff(moment(existingPanne.tempInitial, "YYYY-MM-DD HH:mm:ss"));
+
+    // Convert to duration
+    let duree = moment.duration(dureeInMilliseconds);
+
+    // Format the duration to hours, minutes, and seconds
+    let formattedDuree = `${Math.floor(duree.asDays())} jours, ${duree.hours()} heures, ${duree.minutes()} minutes, et ${duree.seconds()} secondes`;
 
     //update the panne 
-    if (source) existingPanne.dateReparation = dateReparation;
-    if (etat) existingPanne.tempFinal = dateReparation;
-    if (liberation) existingPanne.dureeDintervention = duree;
+    existingPanne.dateReparation = dateReparation;
+    existingPanne.tempFinal = dateReparation;
+    existingPanne.dureeDintervention = formattedDuree;
 
     //save the updated panne
     const updatedPanne = await existingPanne.save();
@@ -344,6 +364,48 @@ const DeletePanne = asyncErrorHandler(async (req, res, next) => {
     }
     res.status(200).json({ message: 'Panne supprimée avec succès' });
 });
+// get pannes by product
+const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the product exists
+    const existingProduct = await ProductService.findProductByCode(code);
+    if (!existingProduct) {
+        return next(new CustomError('Produit non trouvé', 404));
+    }
+
+    // Get all pannes by product
+    const pannes = await Panne.findAll({
+        where: {
+            product: existingProduct.id
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['code', 'fullname'],
+            }
+        ]
+    })
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
 
 module.exports = {
     firstPanneStep,
@@ -352,5 +414,6 @@ module.exports = {
     secondPanneStep,
     thirdPanneStep,
     fourthPanneStep,
-    DeletePanne
+    DeletePanne,
+    GetPannesByProduct
 }

@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
+const Piece = require('./PieceModel.js');
 
 const Consommation = sequelize.define('consommation', {
     id: {
@@ -35,6 +36,12 @@ const Consommation = sequelize.define('consommation', {
 },{
     freezeTableName: true,
     timestamps: false,
+});
+
+// Define associations
+Consommation.belongsTo(Piece, {
+    foreignKey: 'piece',
+    as: 'pieceAssociation'
 });
 
 module.exports = Consommation;
