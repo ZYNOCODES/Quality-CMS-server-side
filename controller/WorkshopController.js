@@ -30,10 +30,16 @@ const GetAllWorkshopsByZone = asyncErrorHandler(async (req, res, next) => {
     if ([zone].some(field => !field || validator.isEmpty(field))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
+
+    //check if zone exists
+    const existZone = await ZoneService.findZoneByCode(zone);
+    if (!existZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
     //get all Products
     const Workshops = await Workshop.findAll({
         where: {
-            zone
+            zone: existZone.id
         },
         include: [
             {

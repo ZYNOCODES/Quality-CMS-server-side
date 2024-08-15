@@ -13,7 +13,7 @@ const checkAuthorization = require('../middleware/Authorization.js');
 router.use(requireAuth);
 //MANAGER ROUTES
 //get all actions
-router.get('/', checkAuthorization([process.env.MANAGER_TYPE]), GetAllActions);
+router.get('/', checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), GetAllActions);
 //create an action
 router.post('/', checkAuthorization([process.env.MANAGER_TYPE]), CreateAction);
 //update an action

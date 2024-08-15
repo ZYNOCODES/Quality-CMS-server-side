@@ -19,6 +19,7 @@ const checkAuthorization = (allowedTypes) => {
             if (!Array.isArray(allowedTypes) ||!allowedTypes.includes(userType)) {
                 return next(new CustomError('Unauthorized access. You do not have permission to access this resource.', 403));
             }
+            
             // User type is allowed, continue
             next();
         } catch (error) {

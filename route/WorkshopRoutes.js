@@ -16,7 +16,7 @@ router.use(requireAuth);
 //get all workshops
 router.get('/', checkAuthorization([process.env.MANAGER_TYPE]), GetAllWorkshops);
 //get all workshops by zone
-router.get('/:zone', checkAuthorization([process.env.MANAGER_TYPE]), GetAllWorkshopsByZone);
+router.get('/:zone', checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetAllWorkshopsByZone);
 //create a new workshop
 router.post('/', checkAuthorization([process.env.MANAGER_TYPE]), CreateWorkshop);
 //update workshop

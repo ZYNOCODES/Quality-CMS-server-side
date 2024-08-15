@@ -1,4 +1,5 @@
 const sequelize = require('../config/Database.js');
+const { Op } = require('sequelize');
 const validator = require('validator');
 const Panne = require('../model/PanneModel.js');
 const Product = require('../model/ProductModel.js');
@@ -94,8 +95,6 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
 });
 // get all pannes by technician
 const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
-    console.log('*************************getAllPannesByTechnician*************************');
-
     const { code } = req.params;
 
     // Validate required fields
@@ -116,11 +115,6 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
         },
         include: [
             {
-                model: Product,
-                as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot'],
-            },
-            {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
@@ -136,10 +130,32 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
     // Respond with the pannes
     res.status(200).json(pannes);
 });
+// get all pannes
+const getAllPannes = asyncErrorHandler(async (req, res, next) => {
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            technician: null
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            }
+        ]
+    })
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
 // get all pannes by zone
 const getAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
-    console.log('*************************getAllPannesByZone*************************');
-
     const { code } = req.params;
 
     // Validate required fields
@@ -170,17 +186,157 @@ const getAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
         },
         include: [
             {
-                model: Product,
-                as: 'productAssociation',
-                attributes: ['code', 'marque', 'model', 'lot'],
-            },
-            {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             }
         ]
     })
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
+// get all taken pannes 
+const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            technician: { [Op.ne]: null }
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            }
+        ]
+    });
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
+// get all taken pannes by zone
+const getAllTakenPannesByZone = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the zone exists
+    const existingZone = await ZoneService.findZoneByCode(code);
+    if (!existingZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
+
+    // get all workshops related to zone
+    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
+    if (existingWorkshops.length <= 0) {
+        return next(new CustomError('Aucun atelier trouvée dans cette zone', 404));
+    }
+    
+    // Extract workshop IDs
+    const workshopIds = existingWorkshops.map(workshop => workshop.id);
+
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            workshop: workshopIds,
+            technician: { [Op.ne]: null },
+            dateReparation: null
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            }
+        ]
+    });
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
+// get all clotured pannes
+const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            technician: { [Op.ne]: null },
+            dateReparation: { [Op.ne]: null }
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            }
+        ]
+    });
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
+// get all clotured pannes by zone
+const getAllCloturedPannesByZone = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the zone exists
+    const existingZone = await ZoneService.findZoneByCode(code);
+    if (!existingZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
+
+    // get all workshops related to zone
+    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
+    if (existingWorkshops.length <= 0) {
+        return next(new CustomError('Aucun atelier trouvée dans cette zone', 404));
+    }
+    
+    // Extract workshop IDs
+    const workshopIds = existingWorkshops.map(workshop => workshop.id);
+
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            workshop: workshopIds,
+            technician: { [Op.ne]: null },
+            dateReparation: { [Op.ne]: null }
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            }
+        ]
+    });
 
     //check if the pannes were found
     if (!pannes || pannes.length <= 0) {
@@ -415,7 +571,12 @@ const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
 module.exports = {
     firstPanneStep,
     getAllPannesByTechnician,
+    getAllPannes,
     getAllPannesByZone,
+    getAllTakenPannes,
+    getAllTakenPannesByZone,
+    getAllCloturedPannes,
+    getAllCloturedPannesByZone,
     secondPanneStep,
     thirdPanneStep,
     fourthPanneStep,
