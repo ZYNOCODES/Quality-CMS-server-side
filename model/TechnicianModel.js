@@ -29,6 +29,10 @@ const Technician = sequelize.define('technician', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    zone: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
 },{
     freezeTableName: true,
     timestamps: false,

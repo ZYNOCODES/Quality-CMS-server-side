@@ -12,31 +12,58 @@ const PanneService = require('../service/PanneService.js');
 
 //get all Products
 const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
+    console.log('*************************GetAllProducts*************************');
     const { zone } = req.params;
     //check if the zone is provided
     if ([zone].some(field => !field || validator.isEmpty(field))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
+    
+    //check if the zone exists
+    const existingZone = await ZoneService.findZoneByCode(zone);
+    if (!existingZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
+
     //get all Products
-    const Products = await Product.findAll({
-        where: {
-            zone
-        },
-        include: [
-            {
-                model: Family,
-                as: 'familyAssociation',
-                attributes: ['code', 'name']
+    //check if req.user.code start with 'M' to get all Products
+    let Products = null;
+    if(req.user.code.startsWith('M'))
+        Products = await Product.findAll({
+            include: [
+                {
+                    model: Family,
+                    as: 'familyAssociation',
+                    attributes: ['code', 'name']
+                },
+                {
+                    model: Zone,
+                    as: 'zoneAssociation',
+                    attributes: ['code', 'name']
+                }
+            ]
+        });
+    else
+        Products = await Product.findAll({
+            where: {
+                zone: existingZone.id
             },
-            {
-                model: Zone,
-                as: 'zoneAssociation',
-                attributes: ['code', 'name']
-            }
-        ]
-    });
+            include: [
+                {
+                    model: Family,
+                    as: 'familyAssociation',
+                    attributes: ['code', 'name']
+                },
+                {
+                    model: Zone,
+                    as: 'zoneAssociation',
+                    attributes: ['code', 'name']
+                }
+            ]
+        });
+    
     //check if there are Products
-    if (Products.length < 1) {
+    if (!Products || Products.length < 1) {
         return next(new CustomError('Aucun produit trouvé', 404));
     }
     res.status(200).json(Products);

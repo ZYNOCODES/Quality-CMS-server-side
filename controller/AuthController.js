@@ -5,6 +5,7 @@ const Technician = require('../model/TechnicianModel.js');
 const Manager = require('../model/ManagerModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
+const ZoneService = require('../service/ZoneService.js')
 const { generateUniqueCode } = require('../util/Codification.js');
 const {
     createToken
@@ -42,15 +43,22 @@ const SignIn = asyncErrorHandler(async (req, res, next) => {
     if (!isPasswordCorrect) {
         return next(new CustomError('Identifiant ou mot de passe invalide', 400));
     }
+
+    //check if zone is exists
+    const zone = await ZoneService.findZoneById(user.zone);
+    if (!zone) {
+        return next(new CustomError('Zone invalide', 400));
+    }
+
     // Generate JWT token
-    const token = createToken(user.id, user.role, user.code);
+    const token = createToken(user.id, user.role, user.code, zone.code);
 
     // Return token
     res.status(200).json({ token });
 });
 //SignUp
 const SignUp = asyncErrorHandler(async (req, res, next) => {
-    const { username, password, phoneNumber, role } = req.body;
+    const { username, password, phoneNumber, role, zone } = req.body;
     //check if username or phone number exists
     let usernameCheck = await _findUser(username);
     let phoneNumberCheck = await _findUser(phoneNumber);
@@ -62,7 +70,7 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
     //create user by role
     let user;
     switch (role) {
-        case 'agent':
+        case process.env.AGENT_TYPE:
             // Generate a unique code for the product
             const codeAA = await generateUniqueCode("AA", 6, AccessAgent);
             if (!codeAA) {
@@ -73,10 +81,11 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
                 code: codeAA,
                 username,
                 password: hashedPassword,
-                phoneNumber
+                phoneNumber,
+                zone
             });
             break;
-        case 'technician':
+        case process.env.TECHNICIAN_TYPE:
             // Generate a unique code for the product
             const codeT = await generateUniqueCode("T", 6, Technician);
             if (!codeT) {
@@ -86,10 +95,11 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
                 code: codeT,
                 username,
                 password: hashedPassword,
-                phoneNumber
+                phoneNumber,
+                zone
             });
             break;
-        case 'manager':
+        case process.env.MANAGER_TYPE:
             // Generate a unique code for the product
             const codeM = await generateUniqueCode("M", 6, Manager);
             if (!codeM) {
@@ -99,7 +109,8 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
                 code: codeM,
                 username,
                 password: hashedPassword,
-                phoneNumber
+                phoneNumber,
+                zone
             });
             break;
         default:

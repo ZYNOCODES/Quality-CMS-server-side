@@ -13,7 +13,7 @@ const checkAuthorization = require('../middleware/Authorization.js');
 router.use(requireAuth);
 //MANAGER ROUTES
 //get all workshops
-router.get('/:zone', checkAuthorization([process.env.MANAGER_TYPE]), GetAllProducts);
+router.get('/:zone', checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllProducts);
 //create a new workshop
 router.post('/', checkAuthorization([process.env.MANAGER_TYPE]), CreateProduct);
 //update workshop

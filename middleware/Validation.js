@@ -4,9 +4,11 @@ const validator = require('validator');
 
 // Middleware to validate signup inputs
 const validateSignup = asyncErrorHandler(async (req, res, next) => {
-    const { username, password, phoneNumber } = req.body;
+    const { username, password, phoneNumber, zone } = req.body;
     // Check if username, password, and phoneNumber are provided
-    if (validator.isEmpty(username) || validator.isEmpty(password) || validator.isEmpty(phoneNumber)) {
+    if (validator.isEmpty(username) || validator.isEmpty(password) || 
+        validator.isEmpty(phoneNumber) || validator.isEmpty(zone) 
+    ) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
@@ -31,6 +33,11 @@ const validateSignup = asyncErrorHandler(async (req, res, next) => {
     if (!phoneNumber || !validator.isMobilePhone(phoneNumber, 'ar-DZ')
     ) {
         return next(new CustomError('Numéro de téléphone invalide : veuillez fournir un numéro de téléphone valide', 400));
+    }
+
+    // Validate zone: ensure it's a valid zone
+    if (!zone || !validator.isNumeric(zone)) {
+        return next(new CustomError('Zone invalide : veuillez fournir une zone valide', 400));
     }
 
     // If all inputs are valid, proceed to the next middleware

@@ -94,6 +94,8 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
 });
 // get all pannes by technician
 const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
+    console.log('*************************getAllPannesByTechnician*************************');
+
     const { code } = req.params;
 
     // Validate required fields
@@ -136,6 +138,8 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
 });
 // get all pannes by zone
 const getAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
+    console.log('*************************getAllPannesByZone*************************');
+
     const { code } = req.params;
 
     // Validate required fields
@@ -366,6 +370,7 @@ const DeletePanne = asyncErrorHandler(async (req, res, next) => {
 });
 // get pannes by product
 const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
+    console.log('*************************GetPannesByProduct*************************');
     const { code } = req.params;
 
     // Validate required fields

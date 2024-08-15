@@ -5,6 +5,7 @@ const validator = require('validator');
 const { generateUniqueCode } = require('../util/Codification.js');
 const WorkshopService = require('../service/WorkshopService.js');
 const ProductService = require('../service/ProductService.js');
+const UsersService = require('../service/UsersService.js');
 
 //get all Zones
 const GetAllZones = asyncErrorHandler(async (req, res, next) => {
@@ -97,11 +98,14 @@ const DeleteZone = asyncErrorHandler(async (req, res, next) => {
     if (!existZone) {
         return next(new CustomError('Zone non trouvée', 404));
     }
-    //check if there is workshops and products related to this Zone
+    //check if there is workshops or products or users are related to this Zone
     const Workshop = await WorkshopService.findWorkshopByZone(existZone.id);
     const Product = await ProductService.findProductByZone(existZone.id);
-    if(Workshop || Product){
-        return next(new CustomError('Vous ne pouvez pas supprimer cette zone car elle est liée à un atelier ou un produit existante.', 400));
+    const User = await UsersService.findUserByZone(existZone.id);
+    if(Workshop || Product || User){
+        if (User) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car il existe des utilisateurs liés à cette zone', 400));
+        if (Product) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car il existe des produits liés à cette zone', 400));
+        if (Workshop) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car il existe des ateliers liés à cette zone', 400));
     }
     //deletec Zone
     const deletedZone = await existZone.destroy();

@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
 
-const AccessAgent = sequelize.define('accessAgent', {
+const Agent = sequelize.define('agent', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -24,9 +24,13 @@ const AccessAgent = sequelize.define('accessAgent', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    zone: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
 },{
     freezeTableName: true,
     timestamps: false,
 });
 
-module.exports = AccessAgent;
+module.exports = Agent;
