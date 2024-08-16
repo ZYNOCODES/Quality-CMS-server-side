@@ -9,13 +9,14 @@ const {
 } = require('../middleware/Validation.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
+const limiter = require('../middleware/RateLimiting.js');
 
 //SHEARED ROUTES
-router.post('/signin', SignIn);
+router.post('/signin', limiter, SignIn);
 //secure all routes below with requireAuth
 router.use(requireAuth);
 //MANAGER ROUTES
-router.post('/signup', checkAuthorization([process.env.MANAGER_TYPE]), validateSignup, SignUp);
+router.post('/signup', limiter, checkAuthorization([process.env.MANAGER_TYPE]), validateSignup, SignUp);
 
 
 module.exports = router;

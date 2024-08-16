@@ -6,6 +6,7 @@ const validator = require('validator');
 const { generateUniqueCode } = require('../util/Codification.js');
 const PanneService = require('../service/PanneService.js');
 const ZoneService = require('../service/ZoneService.js');
+const WorkshopService = require('../service/WorkshopService.js');
 
 //get all Workshops
 const GetAllWorkshops = asyncErrorHandler(async (req, res, next) => {
@@ -104,19 +105,25 @@ const CreateWorkshop = asyncErrorHandler(async (req, res, next) => {
 //update Workshop
 const UpdateWorkshop = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { name } = req.body;
+    const { name, zone } = req.body;
     //check if name is provided
-    if (!name || validator.isEmpty(name)) {
-        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    if ((!name || validator.isEmpty(name)) && (!zone || validator.isEmpty(zone))) {
+        return next(new CustomError('Un des champs doivent être remplis', 400));
     }
     //check if Workshop exists
-    const existWorkshop = await Workshop.findOne({
-        where: {
-            code
-        },
-    });
+    const existWorkshop = await WorkshopService.findWorkshopByCode(code);
     if (!existWorkshop) {
         return next(new CustomError('Atelier non trouvée', 404));
+    }
+
+    if(zone) {
+        //check if zone exists
+        const existingZone = await ZoneService.findZoneByCode(zone);
+        if(!existingZone){
+            return next(new CustomError('Zone non trouvée', 404));
+        }
+        // save
+        existWorkshop.zone = existingZone.id;
     }
     //update Workshop
     if(name) existWorkshop.name = name;

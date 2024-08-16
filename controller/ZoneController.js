@@ -103,9 +103,9 @@ const DeleteZone = asyncErrorHandler(async (req, res, next) => {
     const Product = await ProductService.findProductByZone(existZone.id);
     const User = await UsersService.findUserByZone(existZone.id);
     if(Workshop || Product || User){
-        if (User) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car il existe des utilisateurs liés à cette zone', 400));
-        if (Product) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car il existe des produits liés à cette zone', 400));
-        if (Workshop) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car il existe des ateliers liés à cette zone', 400));
+        if (User) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car elle est liée à un utilisateur existant.', 400));
+        if (Product) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car elle est liée à un produit existant.', 400));
+        if (Workshop) return next(new CustomError('Vous ne pouvez pas supprimer cette zone car elle est liée à un atelier existant.', 400));
     }
     //deletec Zone
     const deletedZone = await existZone.destroy();

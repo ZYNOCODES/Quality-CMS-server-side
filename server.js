@@ -6,7 +6,6 @@ const sequelize = require('./config/Database');
 const ErrorHandler = require('./controller/ErrorController');
 //security
 const cors = require('cors');
-const limiter = require('./middleware/RateLimiting');
 //routes
 const AuthRoutes = require('./route/AuthRoutes');
 const ActionRoutes = require('./route/ActionRoutes');
@@ -35,8 +34,6 @@ app.use('/files', express.static('./files'));
 //body parser
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: false }));
-//RateLimiting
-app.use(limiter);
 
 //routes
 app.use('/api/auth', AuthRoutes);

@@ -372,11 +372,11 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
     }
 
     // Get the current date and time
-    const dateDeclaration = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
+    const tempInitial = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
     
     //update the panne 
     existingPanne.technician = existingTechnician.id;
-    existingPanne.tempInitial = dateDeclaration;
+    existingPanne.tempInitial = tempInitial;
 
     //save the updated panne
     const updatedPanne = await existingPanne.save();

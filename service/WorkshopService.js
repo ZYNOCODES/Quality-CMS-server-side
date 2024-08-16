@@ -3,6 +3,13 @@ const Workshop = require('../model/WorkshopModel');
 const findWorkshopById = async (id) => {
     return await Workshop.findByPk(id);
 };
+const findWorkshopByCode = async (code) => {
+    return await Workshop.findOne({
+        where: {
+            code
+        },
+    })
+};
 const findWorkshopByZone = async (zone) => {
     return await Workshop.findOne({
         where: {
@@ -21,6 +28,7 @@ const findAllWorkshopsByZone = async (zone) => {
 };
 module.exports = {
     findWorkshopById,
+    findWorkshopByCode,
     findWorkshopByZone,
     findAllWorkshopsByZone
 }

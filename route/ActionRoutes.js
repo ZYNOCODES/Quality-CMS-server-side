@@ -8,17 +8,19 @@ const {
 } = require('../controller/ActionController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
+const limiter = require('../middleware/RateLimiting.js');
+const limiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
 //MANAGER ROUTES
 //get all actions
-router.get('/', checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), GetAllActions);
+router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), GetAllActions);
 //create an action
-router.post('/', checkAuthorization([process.env.MANAGER_TYPE]), CreateAction);
+router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateAction);
 //update an action
-router.patch('/:code', checkAuthorization([process.env.MANAGER_TYPE]), UpdateAction);
+router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateAction);
 //delete an action
-router.delete('/:code', checkAuthorization([process.env.MANAGER_TYPE]), DeleteAction);
+router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeleteAction);
 
 module.exports = router;

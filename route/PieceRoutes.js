@@ -8,17 +8,19 @@ const {
 } = require('../controller/PieceController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
+const limiter = require('../middleware/RateLimiting.js');
+const limiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
 //MANAGER ROUTES
 //get all pieces
-router.get('/', checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), GetAllPieces);
+router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), GetAllPieces);
 //create a new piece
-router.post('/', checkAuthorization([process.env.MANAGER_TYPE]), CreatePiece);
+router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreatePiece);
 //update piece
-router.patch('/:code', checkAuthorization([process.env.MANAGER_TYPE]), UpdatePiece);
+router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdatePiece);
 //delete piece
-router.delete('/:code', checkAuthorization([process.env.MANAGER_TYPE]), DeletePiece);
+router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeletePiece);
 
 module.exports = router;

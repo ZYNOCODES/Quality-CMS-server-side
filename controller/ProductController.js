@@ -12,7 +12,6 @@ const PanneService = require('../service/PanneService.js');
 
 //get all Products
 const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
-    console.log('*************************GetAllProducts*************************');
     const { zone } = req.params;
     //check if the zone is provided
     if ([zone].some(field => !field || validator.isEmpty(field))) {

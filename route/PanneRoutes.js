@@ -17,43 +17,45 @@ const {
 } = require('../controller/PanneController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
+const limiter = require('../middleware/RateLimiting.js');
+const limiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
 
 //SHARED ROUTES
 // get all pannes by zone
-router.get('/byzone/:code', checkAuthorization([process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE, process.env.MANAGER_TYPE]), getAllPannesByZone);
+router.get('/byzone/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), getAllPannesByZone);
 // get all taken pannes by zone
-router.get('/linked/byzone/:code', checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE]), getAllTakenPannesByZone);
+router.get('/linked/byzone/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllTakenPannesByZone);
 // get all pannes by product
-router.get('/byproduct/:code', checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE]), GetPannesByProduct);
+router.get('/byproduct/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), GetPannesByProduct);
 //get all clotured pannes by zone
-router.get('/archive/:code', checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE]), getAllCloturedPannesByZone); 
+router.get('/archive/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllCloturedPannesByZone); 
 
 
-//ADMIN ROUTES
-// //get all pannes
-// router.get('/', checkAuthorization([process.env.MANAGER_TYPE]), getAllPannes);
-// //get all taken pannes
-// router.get('/linked', checkAuthorization([process.env.MANAGER_TYPE]), getAllTakenPannes);
-// //get all clotured pannes
-// router.get('/archive', checkAuthorization([process.env.MANAGER_TYPE]), getAllCloturedPannes);
+//MANAGER ROUTES
+//get all pannes
+router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), getAllPannes);
+//get all taken pannes
+router.get('/linked', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), getAllTakenPannes);
+//get all clotured pannes
+router.get('/archive', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), getAllCloturedPannes);
 
 //AGENT ROUTES
 //create a new panne
-router.post('/first', checkAuthorization([process.env.AGENT_TYPE]), firstPanneStep);
+router.post('/first', limiter, checkAuthorization([process.env.AGENT_TYPE]), firstPanneStep);
 //delete panne
-router.delete('/:code', checkAuthorization([process.env.AGENT_TYPE]), DeletePanne);
+router.delete('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeletePanne);
 
 //TECHNICIAN ROUTES
 //get all pannes by technician
-router.get('/technician/:code', checkAuthorization([process.env.TECHNICIAN_TYPE]), getAllPannesByTechnician);
+router.get('/technician/:code', limiterForGet, checkAuthorization([process.env.TECHNICIAN_TYPE]), getAllPannesByTechnician);
 // second update panne 
-router.patch('/second/:code', checkAuthorization([process.env.TECHNICIAN_TYPE]), secondPanneStep);
+router.patch('/second/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), secondPanneStep);
 // third update panne
-router.patch('/third/:code', checkAuthorization([process.env.TECHNICIAN_TYPE]), thirdPanneStep);
+router.patch('/third/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), thirdPanneStep);
 // fourth update panne
-router.patch('/fourth/:code', checkAuthorization([process.env.TECHNICIAN_TYPE]), fourthPanneStep);
+router.patch('/fourth/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), fourthPanneStep);
 
 module.exports = router;
