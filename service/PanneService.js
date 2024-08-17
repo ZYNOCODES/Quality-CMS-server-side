@@ -26,9 +26,17 @@ const findPanneByProduct = async (product) => {
         raw: true
     })
 };
+const findPanneByTechnician = async (Technician) => {
+    return await Panne.findOne({
+        where: {
+            technician: Technician
+        },
+    })
+};
 module.exports = {
     findPanneById,
     findPanneByWorkshop,
     findPanneByProduct,
-    findPanneByCode
+    findPanneByCode,
+    findPanneByTechnician
 }

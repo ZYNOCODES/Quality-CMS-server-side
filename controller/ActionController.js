@@ -70,6 +70,15 @@ const UpdateAction = asyncErrorHandler(async (req, res, next) => {
     if (!existAction) {
         return next(new CustomError('Action non trouvée', 404));
     }
+    //check if name already exists
+    const existingName = await Action.findOne({
+        where: {
+            name
+        },
+    });
+    if (existingName) {
+        return next(new CustomError('Le nom de cette action existe déjà', 400));
+    }
     //update Action
     if(name) existAction.name = name;
     const updatedAction = await existAction.save();

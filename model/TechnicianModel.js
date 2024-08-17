@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
+const Zone = require('./ZoneModel');
 
 const Technician = sequelize.define('technician', {
     id: {
@@ -32,10 +33,20 @@ const Technician = sequelize.define('technician', {
     zone: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        references: {
+            model: 'zone',
+            key: 'id'
+        }
     },
 },{
     freezeTableName: true,
     timestamps: false,
 });
+
+Technician.belongsTo(Zone, {
+    foreignKey: 'zone',
+    as: 'zoneAssociation'
+});
+
 
 module.exports = Technician;

@@ -35,11 +35,6 @@ const validateSignup = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Numéro de téléphone invalide : veuillez fournir un numéro de téléphone valide', 400));
     }
 
-    // Validate zone: ensure it's a valid zone
-    if (!zone || !validator.isNumeric(zone)) {
-        return next(new CustomError('Zone invalide : veuillez fournir une zone valide', 400));
-    }
-
     // If all inputs are valid, proceed to the next middleware
     next();
 });

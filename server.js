@@ -17,6 +17,7 @@ const ProductRoutes = require('./route/ProductRoutes');
 const PanneRoutes = require('./route/PanneRoutes');
 const ConsommationRoutes = require('./route/ConsommationRoutes');
 const ActionCorrectiveRoutes = require('./route/ActionCorrectiveRoutes');
+const UsersRoutes = require('./route/UsersRoutes');
 
 //http server
 const http = require('http');
@@ -46,6 +47,7 @@ app.use('/api/product', ProductRoutes);
 app.use('/api/panne', PanneRoutes);
 app.use('/api/consommation', ConsommationRoutes);
 app.use('/api/actioncorrective', ActionCorrectiveRoutes);
+app.use('/api/users', UsersRoutes);
 
 //error handling
 app.use(ErrorHandler);

@@ -70,6 +70,15 @@ const UpdatePiece = asyncErrorHandler(async (req, res, next) => {
     if (!existPiece) {
         return next(new CustomError('Piece non trouvée', 404));
     }
+    //check if name already exists
+    const existingName = await Piece.findOne({
+        where: {
+            name
+        },
+    });
+    if (existingName) {
+        return next(new CustomError('Le nom de cette piece existe déjà', 400));
+    }
     //update Piece
     if(name) existPiece.name = name;
     const updatedPiece = await existPiece.save();

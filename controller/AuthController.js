@@ -5,7 +5,7 @@ const Technician = require('../model/TechnicianModel.js');
 const Manager = require('../model/ManagerModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
-const ZoneService = require('../service/ZoneService.js')
+const ZoneService = require('../service/ZoneService.js');
 const { generateUniqueCode } = require('../util/Codification.js');
 const {
     createToken
@@ -58,7 +58,7 @@ const SignIn = asyncErrorHandler(async (req, res, next) => {
 });
 //SignUp
 const SignUp = asyncErrorHandler(async (req, res, next) => {
-    const { username, password, phoneNumber, role, zone } = req.body;
+    const { fullname, username, password, phoneNumber, role, zone } = req.body;
     //check if username or phone number exists
     let usernameCheck = await _findUser(username);
     let phoneNumberCheck = await _findUser(phoneNumber);
@@ -67,6 +67,12 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
     }
     //hash password
     const hashedPassword = await hashPassword(password);
+
+    //check if zone is exists
+    const existingZone = await ZoneService.findZoneByCode(zone);
+    if (!existingZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
     //create user by role
     let user;
     switch (role) {
@@ -79,10 +85,11 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
 
             user = await AccessAgent.create({
                 code: codeAA,
+                fullname,
                 username,
                 password: hashedPassword,
                 phoneNumber,
-                zone
+                zone: existingZone.id
             });
             break;
         case process.env.TECHNICIAN_TYPE:
@@ -93,10 +100,11 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
             }
             user = await Technician.create({
                 code: codeT,
+                fullname,
                 username,
                 password: hashedPassword,
                 phoneNumber,
-                zone
+                zone: existingZone.id
             });
             break;
         case process.env.MANAGER_TYPE:
@@ -107,10 +115,11 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
             }
             user = await Manager.create({
                 code: codeM,
+                fullname,
                 username,
                 password: hashedPassword,
                 phoneNumber,
-                zone
+                zone: existingZone.id
             });
             break;
         default:
