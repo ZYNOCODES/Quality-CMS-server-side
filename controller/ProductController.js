@@ -67,6 +67,37 @@ const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
     }
     res.status(200).json(Products);
 });
+//get specific Product
+const GetProduct = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+    //check if the code is provided
+    if ([code].some(field => !field || validator.isEmpty(field))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    //get the Product
+    const product = await Product.findOne({
+        where: {
+            code
+        },
+        include: [
+            {
+                model: Family,
+                as: 'familyAssociation',
+                attributes: ['code', 'name']
+            },
+            {
+                model: Zone,
+                as: 'zoneAssociation',
+                attributes: ['code', 'name']
+            }
+        ]
+    });
+    //check if the Product exists
+    if (!product) {
+        return next(new CustomError('Produit non trouvé', 404));
+    }
+    res.status(200).json(product);
+});
 //create a new Product
 const CreateProduct = asyncErrorHandler(async (req, res, next) => {
     const { marque, model, lot, family, zone } = req.body;
@@ -204,6 +235,7 @@ const DeleteProduct = asyncErrorHandler(async (req, res, next) => {
 
 module.exports = {
     GetAllProducts,
+    GetProduct,
     CreateProduct,
     UpdateProduct,
     DeleteProduct

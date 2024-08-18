@@ -526,7 +526,6 @@ const DeletePanne = asyncErrorHandler(async (req, res, next) => {
 });
 // get pannes by product
 const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
-    console.log('*************************GetPannesByProduct*************************');
     const { code } = req.params;
 
     // Validate required fields

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     GetAllProducts,
+    GetProduct,
     CreateProduct,
     UpdateProduct,
     DeleteProduct
@@ -16,6 +17,8 @@ router.use(requireAuth);
 //MANAGER ROUTES
 //get all workshops
 router.get('/:zone', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllProducts);
+//get specific product by code
+router.get('/one/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetProduct);
 //create a new workshop
 router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateProduct);
 //update workshop
