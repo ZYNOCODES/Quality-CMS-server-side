@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     GetAllWorkshops,
     GetAllWorkshopsByZone,
+    GetAllWorkshopsByIDZone,
     CreateWorkshop,
     UpdateWorkshop,
     DeleteWorkshop
@@ -14,11 +15,15 @@ const limiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
+
+//SHEARED ROUTES
+//get all workshops by zone
+router.get('/:zone', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetAllWorkshopsByZone);
+router.get('/byID/:id', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetAllWorkshopsByIDZone);
+
 //MANAGER ROUTES
 //get all workshops
 router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), GetAllWorkshops);
-//get all workshops by zone
-router.get('/:zone', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetAllWorkshopsByZone);
 //create a new workshop
 router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateWorkshop);
 //update workshop

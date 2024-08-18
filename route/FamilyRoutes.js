@@ -13,9 +13,12 @@ const limiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
-//MANAGER ROUTES
+
+//SHARED ROUTES
 //get all familys
 router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllFamilies);
+
+//MANAGER ROUTES
 //create a new family
 router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateFamily);
 //update family

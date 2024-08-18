@@ -13,9 +13,12 @@ const limiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
-//MANAGER ROUTES
+
+//SHARED ROUTES
 //get all zones
 router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllZones);
+
+//MANAGER ROUTES
 //create a new zone
 router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateZone);
 //update zone

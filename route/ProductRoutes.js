@@ -14,11 +14,13 @@ const limiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
-//MANAGER ROUTES
+//SHARED ROUTES
 //get all workshops
 router.get('/:zone', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllProducts);
 //get specific product by code
-router.get('/one/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetProduct);
+router.get('/one/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetProduct);
+
+//MANAGER ROUTES
 //create a new workshop
 router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateProduct);
 //update workshop

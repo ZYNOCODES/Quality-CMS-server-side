@@ -55,6 +55,37 @@ const GetAllWorkshopsByZone = asyncErrorHandler(async (req, res, next) => {
     }
     res.status(200).json(Workshops);
 });
+//get all Workshops by zone
+const GetAllWorkshopsByIDZone = asyncErrorHandler(async (req, res, next) => {
+    const { id } = req.params;
+    //check if the id is provided
+    if ([id].some(field => !field || validator.isEmpty(field))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if zone exists
+    const existZone = await ZoneService.findZoneById(id);
+    if (!existZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
+    //get all Products
+    const Workshops = await Workshop.findAll({
+        where: {
+            zone: existZone.id
+        },
+        include: [
+            {
+                model: Zone,
+                as: 'zoneAssociation'
+            }
+        ]
+    });
+    //check if there are Workshops
+    if (Workshops.length < 1) {
+        return next(new CustomError('Aucune atelier trouvée', 404));
+    }
+    res.status(200).json(Workshops);
+});
 //create a new Workshop
 const CreateWorkshop = asyncErrorHandler(async (req, res, next) => {
     const { name, zone } = req.body;
@@ -168,6 +199,7 @@ const DeleteWorkshop = asyncErrorHandler(async (req, res, next) => {
 module.exports = {
     GetAllWorkshops,
     GetAllWorkshopsByZone,
+    GetAllWorkshopsByIDZone,
     CreateWorkshop,
     UpdateWorkshop,
     DeleteWorkshop
