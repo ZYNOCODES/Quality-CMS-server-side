@@ -19,80 +19,6 @@ const ActionCorrectiveService = require('../service/ActionCorrectiveService.js')
 const moment = require('moment');
 require('moment-timezone');
 
-// first panne step
-const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
-    const { marque, model, sn, lot, family, workshop, fournisseur, panne, ligne } = req.body;
-
-    // Validate required fields
-    if ([ marque, model, sn, lot, family, workshop, fournisseur, panne, ligne].some(field => !field || validator.isEmpty(field.toString()))) {
-        return next(new CustomError('Tous les champs doivent être remplis', 400));
-    }
-
-    // Start a transaction
-    const transaction = await sequelize.transaction();
-    try {
-        // Validate existence of related entities
-        const [existingFamily , existingWorkshop] = await Promise.all([
-            FamilyService.findFamilyById(family),
-            WorkshopService.findWorkshopById(workshop)
-        ]);
-
-        if (!existingFamily) throw new CustomError('Famille non trouvée', 404);
-        if (!existingWorkshop) throw new CustomError('Atelier non trouvé', 404);
-
-        // Check if the Product already exists
-        let product = await ProductService.findProductByModel(model);
-
-        if (!product) {
-            // Generate a unique code for the product
-            const code = await generateUniqueCode("P", 6, Product);
-            if (!code) throw new CustomError('Un problème est survenu, veuillez réessayer.', 400);
-
-            // Create a new Product
-            product = await Product.create({
-                code,
-                marque,
-                model,
-                lot,
-                family: existingFamily.id,
-                zone: existingWorkshop.zone
-            }, { transaction });
-
-            if (!product) throw new CustomError('Un problème est survenu lors de la création d\'un produit, veuillez réessayer.', 400);
-        }
-
-        // Get the current date and time
-        const dateDeclaration = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
-
-        // Generate a unique code for the product
-        const code = await generateUniqueCode("PN", 6, Panne);
-        if (!code) throw new CustomError('Un problème est survenu, veuillez réessayer.', 400);
-
-        // Create a new Panne
-        const newPanne = await Panne.create({
-            code,
-            dateDeclaration,
-            fournisseur,
-            sn,
-            panne,
-            ligne,
-            product: product.id,
-            workshop: existingWorkshop.id
-        }, { transaction });
-
-        if (!newPanne) throw new CustomError('Un problème est survenu lors de la création d\'une panne, veuillez réessayer.', 400);
-
-        // Commit the transaction
-        await transaction.commit();
-
-        // Send the response message
-        res.status(200).json({ message: 'Panne créée avec succès' });
-    } catch (error) {
-        // Rollback the transaction in case of error
-        await transaction.rollback();
-        return next(error);
-    }
-});
 // get all pannes by technician
 const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
@@ -153,6 +79,45 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
 
     // Respond with the pannes
     res.status(200).json(pannes);
+});
+// get specific panne
+const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if panne exists
+    const existingPanne = await Panne.findOne({
+        where:{
+            code
+        },
+        include: [
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['code', 'fullname', 'phoneNumber']
+            },
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name']
+            },
+            {
+                model: Product,
+                as: 'productAssociation',
+                attributes: ['code', 'marque', 'model']
+            }
+        ]
+    })
+    if(!existingPanne){
+        return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    // Respond with the panne
+    res.status(200).json(existingPanne);
 });
 // get all pannes by zone
 const getAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
@@ -346,6 +311,122 @@ const getAllCloturedPannesByZone = asyncErrorHandler(async (req, res, next) => {
     // Respond with the pannes
     res.status(200).json(pannes);
 });
+// get pannes by product
+const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the product exists
+    const existingProduct = await ProductService.findProductByCode(code);
+    if (!existingProduct) {
+        return next(new CustomError('Produit non trouvé', 404));
+    }
+
+    // Get all pannes by product
+    const pannes = await Panne.findAll({
+        where: {
+            product: existingProduct.id
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['code', 'fullname'],
+            }
+        ]
+    })
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
+// first panne step
+const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
+    const { marque, model, sn, lot, family, workshop, fournisseur, panne, ligne } = req.body;
+
+    // Validate required fields
+    if ([ marque, model, sn, lot, family, workshop, fournisseur, panne, ligne].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+    try {
+        // Validate existence of related entities
+        const [existingFamily , existingWorkshop] = await Promise.all([
+            FamilyService.findFamilyById(family),
+            WorkshopService.findWorkshopById(workshop)
+        ]);
+
+        if (!existingFamily) throw new CustomError('Famille non trouvée', 404);
+        if (!existingWorkshop) throw new CustomError('Atelier non trouvé', 404);
+
+        // Check if the Product already exists
+        let product = await ProductService.findProductByModel(model);
+
+        if (!product) {
+            // Generate a unique code for the product
+            const code = await generateUniqueCode("P", 6, Product);
+            if (!code) throw new CustomError('Un problème est survenu, veuillez réessayer.', 400);
+
+            // Create a new Product
+            product = await Product.create({
+                code,
+                marque,
+                model,
+                lot,
+                family: existingFamily.id,
+                zone: existingWorkshop.zone
+            }, { transaction });
+
+            if (!product) throw new CustomError('Un problème est survenu lors de la création d\'un produit, veuillez réessayer.', 400);
+        }
+
+        // Get the current date and time
+        const dateDeclaration = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
+
+        // Generate a unique code for the product
+        const code = await generateUniqueCode("PN", 6, Panne);
+        if (!code) throw new CustomError('Un problème est survenu, veuillez réessayer.', 400);
+
+        // Create a new Panne
+        const newPanne = await Panne.create({
+            code,
+            dateDeclaration,
+            fournisseur,
+            sn,
+            panne,
+            ligne,
+            product: product.id,
+            workshop: existingWorkshop.id
+        }, { transaction });
+
+        if (!newPanne) throw new CustomError('Un problème est survenu lors de la création d\'une panne, veuillez réessayer.', 400);
+
+        // Commit the transaction
+        await transaction.commit();
+
+        // Send the response message
+        res.status(200).json({ message: 'Panne créée avec succès' });
+    } catch (error) {
+        // Rollback the transaction in case of error
+        await transaction.rollback();
+        return next(error);
+    }
+});
 // second panne step
 const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
@@ -524,58 +605,17 @@ const DeletePanne = asyncErrorHandler(async (req, res, next) => {
     }
     res.status(200).json({ message: 'Panne supprimée avec succès' });
 });
-// get pannes by product
-const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
-    const { code } = req.params;
-
-    // Validate required fields
-    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
-        return next(new CustomError('Tous les champs doivent être remplis', 400));
-    }
-
-    //check if the product exists
-    const existingProduct = await ProductService.findProductByCode(code);
-    if (!existingProduct) {
-        return next(new CustomError('Produit non trouvé', 404));
-    }
-
-    // Get all pannes by product
-    const pannes = await Panne.findAll({
-        where: {
-            product: existingProduct.id
-        },
-        include: [
-            {
-                model: Workshop,
-                as: 'workshopAssociation',
-                attributes: ['code', 'name'],
-            },
-            {
-                model: Technician,
-                as: 'technicianAssociation',
-                attributes: ['code', 'fullname'],
-            }
-        ]
-    })
-
-    //check if the pannes were found
-    if (!pannes || pannes.length <= 0) {
-        return next(new CustomError('Aucune panne trouvée', 404));
-    }
-
-    // Respond with the pannes
-    res.status(200).json(pannes);
-});
 
 module.exports = {
-    firstPanneStep,
     getAllPannesByTechnician,
+    getSpecificPanne,
     getAllPannes,
     getAllPannesByZone,
     getAllTakenPannes,
     getAllTakenPannesByZone,
     getAllCloturedPannes,
     getAllCloturedPannesByZone,
+    firstPanneStep,
     secondPanneStep,
     thirdPanneStep,
     fourthPanneStep,

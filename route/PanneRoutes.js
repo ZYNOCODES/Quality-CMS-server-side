@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const {
-    firstPanneStep,
     getAllPannesByTechnician,
     getAllPannes,
+    getSpecificPanne,
     getAllPannesByZone,
     getAllTakenPannes,
     getAllTakenPannesByZone,
     getAllCloturedPannes,
     getAllCloturedPannesByZone,
+    firstPanneStep,
     secondPanneStep,
     thirdPanneStep,
     fourthPanneStep,
@@ -32,7 +33,8 @@ router.get('/linked/byzone/:code', limiterForGet, checkAuthorization([process.en
 router.get('/byproduct/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), GetPannesByProduct);
 //get all clotured pannes by zone
 router.get('/archive/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllCloturedPannesByZone); 
-
+//get specific panne by code
+router.get('/one/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), getSpecificPanne);
 
 //MANAGER ROUTES
 //get all pannes
