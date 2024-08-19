@@ -66,6 +66,11 @@ const CreateActionCorrective = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
     }
 
+    //check if the panne is already closed
+    if(existingPanne.dateReparation){
+        return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas ajouter une nouveau action corrective', 400));
+    }
+
     //check if action exists
     const existingAction = await ActionService.findActionByCode(action);
     if(!existingAction){

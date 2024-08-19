@@ -37,7 +37,8 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
     // Get all pannes by technician
     const pannes = await Panne.findAll({
         where: {
-            technician: existingTechnician.id
+            technician: existingTechnician.id,
+            dateReparation: null
         },
         include: [
             {

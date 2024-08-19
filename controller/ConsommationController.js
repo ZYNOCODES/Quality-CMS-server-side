@@ -48,10 +48,6 @@ const CreateConsommation = asyncErrorHandler(async (req, res, next) => {
     if ([code, piece].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
-    //Validate one of the optional fields
-    if ([quantity].every(field => !field || validator.isEmpty(field.toString()))) {
-        return next(new CustomError('Au moins un des champs optionnels doit être rempli', 400));
-    }
 
     //check if panne exists
     const existingPanne = await PanneService.findPanneByCode(code);
@@ -62,6 +58,11 @@ const CreateConsommation = asyncErrorHandler(async (req, res, next) => {
     //check if the panne is submitted to second scan
     if(!existingPanne.technician && !existingPanne.tempInitial){
         return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
+    }
+
+    //check if the panne is already closed
+    if(existingPanne.dateReparation){
+        return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas ajouter une nouveau consommation PDR', 400));
     }
 
     //check if piece exists
