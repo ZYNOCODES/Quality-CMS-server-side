@@ -13,9 +13,12 @@ const limiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
-//TECHNICIAN ROUTES
+
+//SHEARED ROUTES
 //get all consommation PDR by panne
-router.get('/:code', limiterForGet, checkAuthorization([process.env.TECHNICIAN_TYPE]), GetAllConsommationsByPanne);
+router.get('/:code', limiterForGet, checkAuthorization([process.env.TECHNICIAN_TYPE, process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllConsommationsByPanne);
+
+//TECHNICIAN ROUTES
 //create a new consommation PDR
 router.post('/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), CreateConsommation);
 //update consommation PDR

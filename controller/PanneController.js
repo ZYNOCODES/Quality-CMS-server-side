@@ -62,7 +62,8 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
     // Get all pannes by zone
     const pannes = await Panne.findAll({
         where: {
-            technician: null
+            technician: null,
+            dateReparation: null
         },
         include: [
             {
@@ -148,7 +149,8 @@ const getAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
     const pannes = await Panne.findAll({
         where: {
             workshop: workshopIds,
-            technician: null
+            technician: null,
+            dateReparation: null
         },
         include: [
             {
@@ -172,7 +174,8 @@ const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
     // Get all pannes by zone
     const pannes = await Panne.findAll({
         where: {
-            technician: { [Op.ne]: null }
+            technician: { [Op.ne]: null },
+            dateReparation: null
         },
         include: [
             {
@@ -491,11 +494,21 @@ const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
     }
     
+    if (liberation == true && (!DateLiberation || validator.isEmpty(DateLiberation.toString()))) {
+        return next(new CustomError('Vous devez saisir une date de libération', 400));
+    }
+
     //update the panne 
     if (source) existingPanne.source = source;
     if (etat) existingPanne.etat = etat;
-    existingPanne.liberation = liberation;
-    if (DateLiberation) existingPanne.dateLibiration = DateLiberation;
+    if (liberation == true && DateLiberation) {
+        existingPanne.liberation = true;
+        existingPanne.dateLibiration = DateLiberation;
+    }
+    if (liberation == false) {
+        existingPanne.liberation = false;
+        existingPanne.dateLibiration = null;
+    }
     //save the updated panne
     const updatedPanne = await existingPanne.save();
 
