@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     GetAllUsers,
+    GetAllUserByCode,
     UpdateUser,
     DeleteUser
 } = require('../controller/UsersController.js');
@@ -12,10 +13,17 @@ const LimiterForGet = require('../middleware/RateLimiterForGet.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
-//MANAGER ROUTES
-router.get('/', LimiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), GetAllUsers);
-router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateUser);
-router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeleteUser);
 
+//SHEARCH ROUTES
+//get specific technician by code
+router.get('/:code', LimiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetAllUserByCode);
+
+//MANAGER ROUTES
+//get all users agents and  tichnicians
+router.get('/', LimiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), GetAllUsers);
+//update user
+router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateUser);
+//delete user
+router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeleteUser);
 
 module.exports = router;

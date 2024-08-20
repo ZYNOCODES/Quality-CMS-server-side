@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     getAllPannesByTechnician,
+    getAllArchivePannesByTechnician,
     getAllPannes,
     getSpecificPanne,
     getAllPannesByZone,
@@ -9,12 +10,12 @@ const {
     getAllTakenPannesByZone,
     getAllCloturedPannes,
     getAllCloturedPannesByZone,
+    GetPannesByProduct,
     firstPanneStep,
     secondPanneStep,
     thirdPanneStep,
     fourthPanneStep,
     DeletePanne,
-    GetPannesByProduct
 } = require('../controller/PanneController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
@@ -35,6 +36,8 @@ router.get('/byproduct/:code', limiterForGet, checkAuthorization([process.env.AG
 router.get('/archive/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllCloturedPannesByZone); 
 //get specific panne by code
 router.get('/one/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), getSpecificPanne);
+//get all archive pannes by technician
+router.get('/technician/archive/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE, process.env.MANAGER_TYPE]), getAllArchivePannesByTechnician);
 
 //MANAGER ROUTES
 //get all pannes

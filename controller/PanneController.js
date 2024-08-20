@@ -57,6 +57,44 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
     // Respond with the pannes
     res.status(200).json(pannes);
 });
+// get all archive pannes by technician
+const getAllArchivePannesByTechnician = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the technician exists
+    const existingTechnician = await TechnicianService.findTechnicianByCode(code);
+    if (!existingTechnician) {
+        return next(new CustomError('Technicien non trouvé', 404));
+    }
+
+    // Get all pannes by technician
+    const pannes = await Panne.findAll({
+        where: {
+            technician: existingTechnician.id,
+            dateReparation: { [Op.ne]: null }
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            }
+        ],
+    })
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
 // get all pannes
 const getAllPannes = asyncErrorHandler(async (req, res, next) => {
     // Get all pannes by zone
@@ -622,6 +660,7 @@ const DeletePanne = asyncErrorHandler(async (req, res, next) => {
 
 module.exports = {
     getAllPannesByTechnician,
+    getAllArchivePannesByTechnician,
     getSpecificPanne,
     getAllPannes,
     getAllPannesByZone,

@@ -2,6 +2,7 @@ const sequelize = require('../config/Database.js');
 const { Op } = require('sequelize');
 const Agent = require('../model/AccessAgentModel.js');
 const Technician = require('../model/TechnicianModel.js');
+const Manager = require('../model/ManagerModel.js');
 const Zone = require('../model/ZoneModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
@@ -65,6 +66,61 @@ const GetAllUsers = asyncErrorHandler(async (req, res, next) => {
         return next(error);
     }
 });
+//get specific user by code
+const GetAllUserByCode = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Check if code is provided
+    if (!code || validator.isEmpty(code)) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    let user;
+    if (code.startsWith('AA')) {
+        user = await Agent.findOne({
+            where: {
+                code
+            },
+            include: [
+                {
+                    model: Zone,
+                    as: 'zoneAssociation'
+                }
+            ]
+        });
+    } else if (code.startsWith('T')) {
+        user = await Technician.findOne({
+            where: {
+                code
+            },
+            include: [
+                {
+                    model: Zone,
+                    as: 'zoneAssociation'
+                }
+            ]
+        });
+    } else if (code.startsWith('M')) {
+        user = await Manager.findOne({
+            where: {
+                code
+            },
+            include: [
+                {
+                    model: Zone,
+                    as: 'zoneAssociation'
+                }
+            ]
+        });
+    }
+
+    if (!user) {
+        return next(new CustomError('Utilisateur non trouvé', 404));
+    }
+
+    return res.status(200).json(user);
+});
+
 //update specific user
 const UpdateUser = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
@@ -227,6 +283,7 @@ const _findUser = async (identifier) => {
 };
 module.exports = {
     GetAllUsers,
+    GetAllUserByCode,
     UpdateUser,
-    DeleteUser
+    DeleteUser,
 }
