@@ -19,6 +19,7 @@ const ConsommationRoutes = require('./route/ConsommationRoutes');
 const ActionCorrectiveRoutes = require('./route/ActionCorrectiveRoutes');
 const UsersRoutes = require('./route/UsersRoutes');
 const DashboardRoutes = require('./route/DashboardRoutes');
+const PanneTypeRoutes = require('./route/PanneTypeRoutes');
 
 //http server
 const http = require('http');
@@ -50,6 +51,7 @@ app.use('/api/consommation', ConsommationRoutes);
 app.use('/api/actioncorrective', ActionCorrectiveRoutes);
 app.use('/api/users', UsersRoutes);
 app.use('/api/dashboard', DashboardRoutes);
+app.use('/api/pannetype', PanneTypeRoutes);
 
 //error handling
 app.use(ErrorHandler);

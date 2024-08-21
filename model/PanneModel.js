@@ -3,6 +3,7 @@ const sequelize = require('../config/Database');
 const Product = require('./ProductModel');
 const Workshop = require('./WorkshopModel');
 const Technician = require('./TechnicianModel');
+const PanneType = require('./PanneTypeModel');
 
 const Panne = sequelize.define('panne', {
     id: {
@@ -50,8 +51,12 @@ const Panne = sequelize.define('panne', {
         }
     },
     panne: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false,
+        references: {
+            model: 'typepanne',
+            key: 'id'
+        }
     },
     dateDeclaration: {
         type: DataTypes.DATE,
@@ -91,7 +96,7 @@ const Panne = sequelize.define('panne', {
         allowNull: true,
     },
     dureeDintervention: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: true,
     }
 }, {
@@ -113,6 +118,11 @@ Panne.belongsTo(Workshop, {
 Panne.belongsTo(Product, {
     foreignKey: 'product',
     as: 'productAssociation'
+});
+
+Panne.belongsTo(PanneType, {
+    foreignKey: 'panne',
+    as: 'typepanneAssociation'
 });
 
 module.exports = Panne;

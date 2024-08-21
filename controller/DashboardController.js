@@ -5,9 +5,10 @@ const ActionCorrective = require('../model/ActionCorrectiveModel.js');
 const Consommation = require('../model/ConsommationModel.js');
 const Action = require('../model/ActionModel.js');
 const Piece = require('../model/PieceModel.js');
+const PanneType = require('../model/PanneTypeModel.js');
+const Technician = require('../model/TechnicianModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
-const validator = require('validator');
 const moment = require('moment');
 require('moment-timezone');
 
@@ -27,7 +28,7 @@ const CountAllPannes = asyncErrorHandler(async (req, res, next) => {
         })
     ]);
     // Check if the counts are valid
-    if(!enAttenteCount || !enReparationCount || !repareCount){
+    if(!enAttenteCount === null || !enReparationCount === null || !repareCount === null) {
         return next(new CustomError('Une erreur s\'est produite lors du comptage des pannes', 500));
     }
     // Return the results
@@ -164,6 +165,13 @@ const CountTopPannes = asyncErrorHandler(async (req, res, next) => {
             'panne',
             [sequelize.fn('COUNT', sequelize.col('panne')), 'count']
         ],
+        include: [
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['name'] 
+            }
+        ],
         group: ['panne'],
         order: [[sequelize.fn('COUNT', sequelize.col('panne')), 'DESC']],
         limit: 4
@@ -173,6 +181,7 @@ const CountTopPannes = asyncErrorHandler(async (req, res, next) => {
     if (!topPannes || topPannes.length === 0) {
         return next(new CustomError('Aucune panne trouvée.', 404));
     }
+    
 
     // Return the results
     res.status(200).json(topPannes);
@@ -233,6 +242,73 @@ const CountTopConsommations = asyncErrorHandler(async (req, res, next) => {
     // Return the results
     res.status(200).json(topConsommations);
 });
+const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
+    // Get total number of pannes and total repair time for each technician
+    const techniciansData = await Panne.findAll({
+        attributes: [
+            'technician',
+            [sequelize.fn('COUNT', sequelize.col('panne.id')), 'panneCount'], // Total number of pannes
+            [sequelize.fn('SUM', sequelize.col('dureeDintervention')), 'totalRepairTime'] // Total repair time in milliseconds
+        ],
+        where: {
+            dateReparation: { [Op.ne]: null }
+        },
+        include: [
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['code', 'fullname', 'username']
+            }
+        ],
+        group: ['technician', 'technicianAssociation.id'],
+        order: [[sequelize.fn('COUNT', sequelize.col('panne.id')), 'DESC']],
+        limit: 5
+    });
+
+    // Check if technicians data is valid
+    if (!techniciansData || techniciansData.length === 0) {
+        return next(new CustomError('Aucun technicien trouvé.', 404));
+    }
+
+    // Calculate average repair time and format it
+    const formattedTechnicians = techniciansData.map(technician => {
+        const totalRepairTime = technician.dataValues.totalRepairTime;
+        const panneCount = technician.dataValues.panneCount;
+
+        // Calculate the average repair time in milliseconds
+        const averageRepairTime = totalRepairTime / panneCount;
+
+        // Format the average repair time from milliseconds to a readable string
+        const duration = moment.duration(averageRepairTime);
+        const days = duration.days();
+        const hours = duration.hours();
+        const minutes = duration.minutes();
+        const seconds = duration.seconds();
+        // Build the formatted duration string
+        let formattedDuration = '';
+
+        if (days > 0) {
+            formattedDuration += `${days} jour${days > 1 ? 's' : ''}, `;
+        }
+        if (hours > 0) {
+            formattedDuration += `${hours} heure${hours > 1 ? 's' : ''}, `;
+        }
+        if (minutes > 0) {
+            formattedDuration += `${minutes} minute${minutes > 1 ? 's' : ''}, `;
+        }
+        if (seconds > 0 || formattedDuration === '') { // Include seconds if no other units are present
+            formattedDuration += `${seconds} seconde${seconds > 1 ? 's' : ''}`;
+        }
+
+        return {
+            ...technician.dataValues,
+            averageRepairTime: formattedDuration || "0 secondes"
+        };
+    });
+
+    // Return the results
+    res.status(200).json(formattedTechnicians);
+});
 
 module.exports = {
     CountAllPannes,
@@ -240,5 +316,6 @@ module.exports = {
     CountPannesByMonth,
     CountTopPannes,
     CountTopActionsCorrectives,
-    CountTopConsommations
+    CountTopConsommations,
+    CountTopTechnicians
 };

@@ -16,7 +16,9 @@ const ZoneService = require('../service/ZoneService.js');
 const PanneService = require('../service/PanneService.js');
 const ConsommationService = require('../service/ConsommationService.js');
 const ActionCorrectiveService = require('../service/ActionCorrectiveService.js');
+const PanneTypeService = require('../service/PanneTypeService.js');
 const moment = require('moment');
+const PanneType = require('../model/PanneTypeModel.js');
 require('moment-timezone');
 
 // get all pannes by technician
@@ -44,6 +46,11 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Workshop,
                 as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
                 attributes: ['code', 'name'],
             }
         ],
@@ -83,6 +90,11 @@ const getAllArchivePannesByTechnician = asyncErrorHandler(async (req, res, next)
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['code', 'name'],
             }
         ],
     })
@@ -107,6 +119,11 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Workshop,
                 as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
                 attributes: ['code', 'name'],
             }
         ]
@@ -149,6 +166,11 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
                 model: Product,
                 as: 'productAssociation',
                 attributes: ['code', 'marque', 'model']
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['code', 'name'],
             }
         ]
     })
@@ -195,6 +217,11 @@ const getAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['code', 'name'],
             }
         ]
     })
@@ -219,6 +246,11 @@ const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Workshop,
                 as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
                 attributes: ['code', 'name'],
             }
         ]
@@ -268,6 +300,11 @@ const getAllTakenPannesByZone = asyncErrorHandler(async (req, res, next) => {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['code', 'name'],
             }
         ]
     });
@@ -292,6 +329,11 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Workshop,
                 as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
                 attributes: ['code', 'name'],
             }
         ]
@@ -341,6 +383,11 @@ const getAllCloturedPannesByZone = asyncErrorHandler(async (req, res, next) => {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['code', 'name'],
             }
         ]
     });
@@ -383,6 +430,11 @@ const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
                 model: Technician,
                 as: 'technicianAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['code', 'name'],
             }
         ]
     })
@@ -408,13 +460,15 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     const transaction = await sequelize.transaction();
     try {
         // Validate existence of related entities
-        const [existingFamily , existingWorkshop] = await Promise.all([
-            FamilyService.findFamilyById(family),
-            WorkshopService.findWorkshopById(workshop)
+        const [existingFamily , existingWorkshop , existingPanneType] = await Promise.all([
+            FamilyService.findFamilyByCode(family),
+            WorkshopService.findWorkshopByCode(workshop),
+            PanneTypeService.findPanneTypeByCode(panne)
         ]);
 
-        if (!existingFamily) throw new CustomError('Famille non trouvée', 404);
-        if (!existingWorkshop) throw new CustomError('Atelier non trouvé', 404);
+        if (!existingFamily) return next(new CustomError('Famille non trouvée', 404));
+        if (!existingWorkshop) return next(new CustomError('Atelier non trouvé', 404));
+        if (!existingPanneType) return next(new CustomError('Type de panne non trouvé', 404));
 
         // Check if the Product already exists
         let product = await ProductService.findProductByModel(model);
@@ -422,7 +476,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
         if (!product) {
             // Generate a unique code for the product
             const code = await generateUniqueCode("P", 6, Product);
-            if (!code) throw new CustomError('Un problème est survenu, veuillez réessayer.', 400);
+            if (!code) return next(new CustomError('Un problème est survenu, veuillez réessayer.', 400));
 
             // Create a new Product
             product = await Product.create({
@@ -434,7 +488,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
                 zone: existingWorkshop.zone
             }, { transaction });
 
-            if (!product) throw new CustomError('Un problème est survenu lors de la création d\'un produit, veuillez réessayer.', 400);
+            if (!product) return next(new CustomError('Un problème est survenu lors de la création d\'un produit, veuillez réessayer.', 400));
         }
 
         // Get the current date and time
@@ -442,7 +496,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
 
         // Generate a unique code for the product
         const code = await generateUniqueCode("PN", 6, Panne);
-        if (!code) throw new CustomError('Un problème est survenu, veuillez réessayer.', 400);
+        if (!code) return next(new CustomError('Un problème est survenu, veuillez réessayer.', 400));
 
         // Create a new Panne
         const newPanne = await Panne.create({
@@ -450,13 +504,13 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
             dateDeclaration,
             fournisseur,
             sn,
-            panne,
+            panne: existingPanneType.id,
             ligne,
             product: product.id,
             workshop: existingWorkshop.id
         }, { transaction });
 
-        if (!newPanne) throw new CustomError('Un problème est survenu lors de la création d\'une panne, veuillez réessayer.', 400);
+        if (!newPanne) return next(new CustomError('Un problème est survenu lors de la création d\'une panne, veuillez réessayer.', 400));
 
         // Commit the transaction
         await transaction.commit();
@@ -466,7 +520,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     } catch (error) {
         // Rollback the transaction in case of error
         await transaction.rollback();
-        return next(error);
+        return next('Error: Internal Server', 500);
     }
 });
 // second panne step
@@ -487,6 +541,12 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
     const existingPanne = await PanneService.findPanneByCode(code);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if technician have current panne in progress
+    const existingPanneInProgress = await PanneService.findPanneInProgressByTechnician(existingTechnician.id);
+    if(existingPanneInProgress){
+        return next(new CustomError('Vous avez déjà eu une panne en cours vous devez la terminer', 400));
     }
 
     //check if the panne is already assigned to a technician
@@ -605,18 +665,12 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('La date de réparation doit être supérieure à la date d\'intervention', 400));
     }
     // Calculate the difference in milliseconds
-    let dureeInMilliseconds = moment(dateReparation, "YYYY-MM-DD HH:mm:ss").diff(moment(existingPanne.tempInitial, "YYYY-MM-DD HH:mm:ss"));
-
-    // Convert to duration
-    let duree = moment.duration(dureeInMilliseconds);
-
-    // Format the duration to hours, minutes, and seconds
-    let formattedDuree = `${Math.floor(duree.asDays())} jours, ${duree.hours()} heures, ${duree.minutes()} minutes, et ${duree.seconds()} secondes`;
+    let dureeInMilliseconds = moment(dateReparation).diff(moment(existingPanne.tempInitial, "milliseconds"));
 
     //update the panne 
     existingPanne.dateReparation = dateReparation;
     existingPanne.tempFinal = dateReparation;
-    existingPanne.dureeDintervention = formattedDuree;
+    existingPanne.dureeDintervention = dureeInMilliseconds;
 
     //save the updated panne
     const updatedPanne = await existingPanne.save();

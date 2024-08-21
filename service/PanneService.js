@@ -33,10 +33,29 @@ const findPanneByTechnician = async (Technician) => {
         },
     })
 };
+const findPanneByPanneType = async (type) => {
+    return await Panne.findOne({
+        where: {
+            panne: type
+        },
+        raw: true
+    })
+}
+const findPanneInProgressByTechnician = async (Technician) => {
+    return await Panne.findOne({
+        where: {
+            technician: Technician,
+            dateReparation: null
+        },
+        raw: true
+    })
+}
 module.exports = {
     findPanneById,
     findPanneByWorkshop,
     findPanneByProduct,
     findPanneByCode,
-    findPanneByTechnician
+    findPanneByTechnician,
+    findPanneByPanneType,
+    findPanneInProgressByTechnician
 }

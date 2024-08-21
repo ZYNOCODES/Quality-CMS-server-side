@@ -6,7 +6,8 @@ const {
     CountPannesByMonth,
     CountTopPannes,
     CountTopActionsCorrectives,
-    CountTopConsommations
+    CountTopConsommations,
+    CountTopTechnicians
 } = require('../controller/DashboardController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
@@ -29,5 +30,7 @@ router.get('/top/panne', limiterForGet, checkAuthorization([process.env.MANAGER_
 router.get('/top/action', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopActionsCorrectives);
 //top 4 consommations
 router.get('/top/consommation', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopConsommations);
+//top 5 technicians
+router.get('/top/technician', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopTechnicians);
 
 module.exports = router;
