@@ -98,6 +98,15 @@ const Panne = sequelize.define('panne', {
     dureeDintervention: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    livraison:{
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+    },
+    DateLivraison:{
+        type: DataTypes.DATE,
+        allowNull: true,
     }
 }, {
     freezeTableName: true,

@@ -18,7 +18,7 @@ router.use(requireAuth);
 //get all workshops
 router.get('/:zone', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllProducts);
 //get specific product by code
-router.get('/one/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetProduct);
+router.get('/one/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetProduct);
 
 //MANAGER ROUTES
 //create a new workshop

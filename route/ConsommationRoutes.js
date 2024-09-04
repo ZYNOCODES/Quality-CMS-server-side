@@ -16,14 +16,14 @@ router.use(requireAuth);
 
 //SHEARED ROUTES
 //get all consommation PDR by panne
-router.get('/:code', limiterForGet, checkAuthorization([process.env.TECHNICIAN_TYPE, process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllConsommationsByPanne);
+router.get('/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllConsommationsByPanne);
 
 //TECHNICIAN ROUTES
 //create a new consommation PDR
-router.post('/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), CreateConsommation);
+router.post('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), CreateConsommation);
 //update consommation PDR
-router.patch('/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), UpdateConsommation);
+router.patch('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), UpdateConsommation);
 //delete consommation PDR
-router.delete('/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), DeleteConsommation);
+router.delete('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeleteConsommation);
 
 module.exports = router;

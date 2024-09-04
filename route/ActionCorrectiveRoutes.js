@@ -16,14 +16,14 @@ router.use(requireAuth);
 
 //SHEARED ROUTES
 //get all action corrective by panne
-router.get('/:code', limiterForGet, checkAuthorization([process.env.TECHNICIAN_TYPE, process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllActionsCorrectiveByPanne);
+router.get('/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllActionsCorrectiveByPanne);
 
 //TECHNICIAN ROUTES
 //update action corrective
-router.patch('/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), UpdateActionCorrective);
+router.patch('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), UpdateActionCorrective);
 //delete action corrective
-router.delete('/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), DeleteActionCorrective);
+router.delete('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeleteActionCorrective);
 //create a new action corrective
-router.post('/:code', limiter, checkAuthorization([process.env.TECHNICIAN_TYPE]), CreateActionCorrective);
+router.post('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), CreateActionCorrective);
 
 module.exports = router;

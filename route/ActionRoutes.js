@@ -15,7 +15,7 @@ const limiterForGet = require('../middleware/RateLimiterForGet.js');
 router.use(requireAuth);
 //MANAGER ROUTES
 //get all actions
-router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), GetAllActions);
+router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllActions);
 //create an action
 router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateAction);
 //update an action

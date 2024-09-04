@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     GetAllUsers,
     GetAllUserByCode,
+    GetAllTechnicianByZone,
     UpdateUser,
     DeleteUser
 } = require('../controller/UsersController.js');
@@ -25,5 +26,9 @@ router.get('/', LimiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), G
 router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateUser);
 //delete user
 router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeleteUser);
+
+//AGENT ROUTES
+//get all technician by zone
+router.get('/technician/:code', LimiterForGet, checkAuthorization([process.env.AGENT_TYPE]), GetAllTechnicianByZone);
 
 module.exports = router;

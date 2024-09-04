@@ -18,8 +18,8 @@ router.use(requireAuth);
 
 //SHEARED ROUTES
 //get all workshops by zone
-router.get('/:zone', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetAllWorkshopsByZone);
-router.get('/byID/:id', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetAllWorkshopsByIDZone);
+router.get('/:zone', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllWorkshopsByZone);
+router.get('/byID/:id', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllWorkshopsByIDZone);
 
 //MANAGER ROUTES
 //get all workshops

@@ -6,6 +6,7 @@ const Product = require('../model/ProductModel.js');
 const Workshop = require('../model/WorkshopModel.js');
 const Technician = require('../model/TechnicianModel.js');
 const CustomError = require('../util/CustomError.js');
+const PanneType = require('../model/PanneTypeModel.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const { generateUniqueCode } = require('../util/Codification.js');
 const FamilyService = require('../service/FamilyService.js');
@@ -18,7 +19,6 @@ const ConsommationService = require('../service/ConsommationService.js');
 const ActionCorrectiveService = require('../service/ActionCorrectiveService.js');
 const PanneTypeService = require('../service/PanneTypeService.js');
 const moment = require('moment');
-const PanneType = require('../model/PanneTypeModel.js');
 require('moment-timezone');
 
 // get all pannes by technician
@@ -323,7 +323,93 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
     const pannes = await Panne.findAll({
         where: {
             technician: { [Op.ne]: null },
-            dateReparation: { [Op.ne]: null }
+            dateReparation: { [Op.ne]: null },
+            livraison: true
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['code', 'name'],
+            }
+        ]
+    });
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
+// get all non delivred pannes by zone
+const getAllNoneDelivredPannesByZone = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the zone exists
+    const existingZone = await ZoneService.findZoneByCode(code);
+    if (!existingZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
+
+    // get all workshops related to zone
+    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
+    if (existingWorkshops.length <= 0) {
+        return next(new CustomError('Aucun atelier trouvée dans cette zone', 404));
+    }
+    
+    // Extract workshop IDs
+    const workshopIds = existingWorkshops.map(workshop => workshop.id);
+
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            workshop: workshopIds,
+            technician: { [Op.ne]: null },
+            dateReparation: { [Op.ne]: null },
+            livraison: false
+        },
+        include: [
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['code', 'name'],
+            }
+        ]
+    });
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Respond with the pannes
+    res.status(200).json(pannes);
+});
+// get all non delivred pannes by zone
+const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            technician: { [Op.ne]: null },
+            dateReparation: { [Op.ne]: null },
+            livraison: false
         },
         include: [
             {
@@ -376,7 +462,8 @@ const getAllCloturedPannesByZone = asyncErrorHandler(async (req, res, next) => {
         where: {
             workshop: workshopIds,
             technician: { [Op.ne]: null },
-            dateReparation: { [Op.ne]: null }
+            dateReparation: { [Op.ne]: null },
+            livraison: true
         },
         include: [
             {
@@ -683,6 +770,43 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
     // Respond with success message
     res.status(200).json({ message: 'La panne a ete clôturé avec succès' });
 });
+// make panne delivred
+const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if panne exists
+    const existingPanne = await PanneService.findPanneByCode(code);
+    if(!existingPanne){
+        return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if this panne is clotured
+    if(!existingPanne.dateReparation || !existingPanne.dureeDintervention ){
+        return next(new CustomError('La panne n\'est pas encore cloturé par l\'agent', 400)); 
+    }
+
+    // Get the current date and time
+    const date = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
+    
+    //update the panne 
+    existingPanne.livraison = true;
+    existingPanne.DateLivraison = date;
+
+    //save the updated panne
+    const updatedPanne = await existingPanne.save();
+
+    //check if the panne was updated successfully
+    if (!updatedPanne) {
+        return next(new CustomError('Un problème est survenu lors de la mise à jour du panne, veuillez réessayer.', 400));
+    }
+
+    // Respond with success message
+    res.status(200).json({ message: 'Panne mis à jour avec succès' });
+});
 // delete panne
 const DeletePanne = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
@@ -721,11 +845,14 @@ module.exports = {
     getAllTakenPannes,
     getAllTakenPannesByZone,
     getAllCloturedPannes,
+    getAllNoneDelivredPannes,
+    getAllNoneDelivredPannesByZone,
     getAllCloturedPannesByZone,
     firstPanneStep,
     secondPanneStep,
     thirdPanneStep,
     fourthPanneStep,
+    MakePanneDelivred,
     DeletePanne,
     GetPannesByProduct
 }

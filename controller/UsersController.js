@@ -120,7 +120,32 @@ const GetAllUserByCode = asyncErrorHandler(async (req, res, next) => {
 
     return res.status(200).json(user);
 });
+//get all technician by zone
+const GetAllTechnicianByZone = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+    // Check if code is provided
+    if (!code || validator.isEmpty(code)) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
 
+    //check if zone exist
+    const existingZone = await ZoneService.findZoneByCode(code);
+    if(!existingZone){
+        return next(new CustomError('Zone non trouvé', 404));
+    }
+
+    const user = await Technician.findAll({
+        where: {
+            zone: existingZone.id
+        },
+    });
+
+    if (!user || user.length < 1) {
+        return next(new CustomError('Aucun technicians trouvé', 404));
+    }
+
+    return res.status(200).json(user);
+});
 //update specific user
 const UpdateUser = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
@@ -284,6 +309,7 @@ const _findUser = async (identifier) => {
 module.exports = {
     GetAllUsers,
     GetAllUserByCode,
+    GetAllTechnicianByZone,
     UpdateUser,
     DeleteUser,
 }
