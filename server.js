@@ -56,6 +56,12 @@ app.use('/api/pannetype', PanneTypeRoutes);
 //error handling
 app.use(ErrorHandler);
 
+//client static files
+app.use(express.static("./public/dist"));
+app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "public","dist", "index.html"));
+});
+
 // Disable logging of SQL queries
 sequelize.options.logging = false;
 //connect to db
