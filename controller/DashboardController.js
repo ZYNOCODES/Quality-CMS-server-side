@@ -15,7 +15,7 @@ require('moment-timezone');
 // count pannes between start and end date
 const CountAllPannes = asyncErrorHandler(async (req, res, next) => {
     // Count Pannes for each condition
-    const [enAttenteCount, enReparationCount, repareCount] = await Promise.all([
+    const [enAttenteCount, enReparationCount, NoneDelivredrepareCount, DelivredrepareCount] = await Promise.all([
         Panne.count({ where: { technician: null } }),
         Panne.count({
             where: {
@@ -24,18 +24,28 @@ const CountAllPannes = asyncErrorHandler(async (req, res, next) => {
             }
         }),
         Panne.count({
-            where: { dateReparation: { [Op.ne]: null } }
-        })
+            where: { 
+                dateReparation: { [Op.ne]: null },
+                livraison: false
+            }
+        }),
+        Panne.count({
+            where: { 
+                dateReparation: { [Op.ne]: null },
+                livraison: true
+            }
+        }),
     ]);
     // Check if the counts are valid
-    if(!enAttenteCount === null || !enReparationCount === null || !repareCount === null) {
+    if(!enAttenteCount === null || !enReparationCount === null || !NoneDelivredrepareCount === null || !DelivredrepareCount === null){
         return next(new CustomError('Une erreur s\'est produite lors du comptage des pannes', 500));
     }
     // Return the results
     res.status(200).json({
         EnAttente: enAttenteCount,
         EnReparation: enReparationCount,
-        Repare: repareCount
+        NoneDelivredrepare: NoneDelivredrepareCount,
+        Delivredrepare: DelivredrepareCount
     });
 });
 // count pannes between start and end date
@@ -169,7 +179,7 @@ const CountTopPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: PanneType,
                 as: 'typepanneAssociation',
-                attributes: ['name'] 
+                attributes: ['name', 'duree'] 
             }
         ],
         group: ['panne'],

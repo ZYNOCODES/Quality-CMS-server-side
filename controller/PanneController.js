@@ -170,7 +170,7 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
             {
                 model: PanneType,
                 as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
+                attributes: ['code', 'name', 'duree'],
             }
         ]
     })

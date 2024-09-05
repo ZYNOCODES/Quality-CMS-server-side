@@ -15,7 +15,12 @@ const TypePanne = sequelize.define('typepanne', {
     name:{
         type: DataTypes.STRING,
         allowNull: false,
-    }
+    },
+    duree:{
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+    },
 },{
     freezeTableName: true,
     timestamps: false,

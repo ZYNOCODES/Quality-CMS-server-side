@@ -16,11 +16,16 @@ const GetAllPanneTypes = asyncErrorHandler(async (req, res, next) => {
 });
 //create a new PanneType
 const CreatePanneType = asyncErrorHandler(async (req, res, next) => {
-    const { name } = req.body;
+    const { name, duree } = req.body;
 
     // Check if the name is provided
     if (!name || validator.isEmpty(name)) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if duree is provided so check if it is a string
+    if (duree && !validator.isAlphanumeric(duree)) {
+        return next(new CustomError('La durée doit être une chaîne de caractères', 400));
     }
 
     // Generate a unique code for the PanneType
@@ -43,6 +48,7 @@ const CreatePanneType = asyncErrorHandler(async (req, res, next) => {
     const newPanneType = await PanneType.create({
         code,
         name,
+        duree: duree || null
     });
 
     // Check if the new PanneType was created successfully
@@ -56,11 +62,19 @@ const CreatePanneType = asyncErrorHandler(async (req, res, next) => {
 //update PanneType
 const UpdatePanneType = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { name } = req.body;
+    const { name, duree } = req.body;
     //check if name is provided
-    if (!name || validator.isEmpty(name)) {
-        return next(new CustomError('Tout les champs doivent être remplis', 400));
+    if ((!name || validator.isEmpty(name))
+        && (!duree || validator.isEmpty(duree))
+    ) {
+        return next(new CustomError('Un des champs doivent être remplis', 400));
     }
+
+    //check if duree is provided so check if it is a string
+    if (duree && !validator.isAlphanumeric(duree)) {
+        return next(new CustomError('La durée doit être une chaîne de caractères', 400));
+    }
+
     //check if PanneType exists
     const existPanneType = await PanneType.findOne({
         where: {
@@ -70,18 +84,22 @@ const UpdatePanneType = asyncErrorHandler(async (req, res, next) => {
     if (!existPanneType) {
         return next(new CustomError('Type de panne non trouvée', 404));
     }
-    // Check if the PanneType name already exists
-    const existingName = await PanneType.findOne({
-        where: {
-            name
-        },
-    });
-    if (existingName) {
-        return next(new CustomError('Le nom de ce type de panne existe déjà', 400));
+    
+    //check if the name already exists
+    if (name) {
+        const existingName = await PanneType.findOne({
+            where: {
+                name
+            },
+        });
+        if (existingName) {
+            return next(new CustomError('Le nom de ce type de panne existe déjà', 400));
+        }
     }
 
     //update PanneType
     if(name) existPanneType.name = name;
+    if(duree) existPanneType.duree = duree;
     //save
     const updatedPanneType = await existPanneType.save();
     
