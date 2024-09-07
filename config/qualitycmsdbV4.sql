@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 04, 2024 at 11:24 PM
+-- Generation Time: Sep 07, 2024 at 08:47 PM
 -- Server version: 10.4.25-MariaDB
 -- PHP Version: 8.1.10
 
@@ -64,23 +64,15 @@ CREATE TABLE `actioncorrective` (
 --
 
 INSERT INTO `actioncorrective` (`id`, `panne`, `action`, `date`, `mesure`, `resultat`, `code`) VALUES
-(14, 16, 2, '2024-08-21 17:11:23', 'mesure', '', 'ACC240821181123641699'),
-(15, 16, 3, '2024-08-21 17:11:48', 'mesure 3', '', 'ACC240821181148380315'),
-(16, 16, 9, '2024-08-21 17:12:26', 'mesure 4', 'resultat 4', 'ACC240821181226270254'),
-(17, 17, 2, '2024-08-21 17:29:55', 'mesure', '', 'ACC240821182955355918'),
-(18, 18, 7, '2024-08-21 17:40:17', 'mesure', '', 'ACC240821184017608635'),
-(19, 19, 9, '2024-08-21 17:41:04', 'mesure', 'resultat', 'ACC240821184104321182'),
-(20, 20, 2, '2024-08-21 18:04:37', 'mesure', '', 'ACC240821190437134031'),
-(21, 21, 7, '2024-08-21 18:43:39', 'mesure', '', 'ACC240821194339299876'),
-(22, 22, 2, '2024-08-21 18:46:01', 'mesure', '', 'ACC240821194601720935'),
-(23, 23, 2, '2024-08-21 19:42:01', 'mesure', '', 'ACC240821204201214617'),
-(24, 23, 9, '2024-08-21 19:42:09', 'mesure', 'resultat 4', 'ACC240821204209582749'),
-(25, 24, 3, '2024-08-21 19:50:05', 'ASAS', 'ASAS', 'ACC240821205005548056'),
-(26, 25, 2, '2024-09-01 13:48:59', 'mesure', '', 'ACC240901144859486076'),
-(27, 26, 3, '2024-09-01 13:50:35', 'asdasd', '', 'ACC240901145035792183'),
-(28, 27, 9, '2024-09-01 13:51:02', '', 'fsdfs', 'ACC240901145102950343'),
-(29, 28, 2, '2024-09-04 20:39:29', 'mesure', '', 'ACC240904213929479089'),
-(30, 29, 2, '2024-09-04 21:22:11', 'mesure', '', 'ACC240904222211222068');
+(31, 32, 2, '2024-09-06 18:35:32', 'aaa', '', 'ACC240906193532719382'),
+(33, 34, 3, '2024-09-06 19:07:11', 'ads', 'asd', 'ACC240906200711717478'),
+(34, 35, 3, '2024-09-06 19:11:39', 'Sa', 'S', 'ACC240906201139382092'),
+(35, 33, 3, '2024-09-06 19:23:16', 'asd', 'ads', 'ACC240906202316585424'),
+(36, 37, 3, '2024-09-06 19:23:45', 'asd', 'asd', 'ACC240906202345469065'),
+(37, 36, 3, '2024-09-06 19:24:09', 'asd', 'asd', 'ACC240906202409559675'),
+(38, 38, 7, '2024-09-06 19:25:29', 'asdsda', 'asdsda', 'ACC240906202529691449'),
+(39, 39, 2, '2024-09-07 17:59:25', 'mesure', 'asd', 'ACC240907185925662624'),
+(40, 40, 3, '2024-09-07 18:39:06', 'sdf', 'sdf', 'ACC240907193906768432');
 
 -- --------------------------------------------------------
 
@@ -103,7 +95,8 @@ CREATE TABLE `agent` (
 --
 
 INSERT INTO `agent` (`id`, `fullname`, `username`, `password`, `phoneNumber`, `code`, `zone`) VALUES
-(8, 'zino boumrar', 'zino0', '$2b$10$Yz0XBLmnJjcWYSO9//ouW.HV3wgPftDJjRQruMceF.nH/YrraLXru', '0778295267', 'AA240817201652228513', 3);
+(8, 'zino boumrar', 'zino0', '$2b$10$Yz0XBLmnJjcWYSO9//ouW.HV3wgPftDJjRQruMceF.nH/YrraLXru', '0778295267', 'AA240817201652228513', 3),
+(9, 'ABDELMOUMEN KHALDI', 'KHALDI26', '$2b$10$2P5L9sXM6OU.sJgk1DuhVea9DhzWkVyGFCmfEIUGZaJ9SVGvoNgO6', '0778295269', 'AA240906192749722560', 3);
 
 -- --------------------------------------------------------
 
@@ -124,21 +117,15 @@ CREATE TABLE `consommation` (
 --
 
 INSERT INTO `consommation` (`id`, `panne`, `piece`, `quantity`, `code`) VALUES
-(12, 16, 5, '10', 'CS240821181130740817'),
-(13, 16, 6, '22', 'CS240821181137244699'),
-(14, 17, 3, '10', 'CS240821183005818864'),
-(15, 18, 5, '1', 'CS240821184024699224'),
-(16, 19, 8, '2', 'CS240821184112850361'),
-(17, 20, 6, '3', 'CS240821190442153322'),
-(18, 21, 5, '56', 'CS240821194344923516'),
-(19, 22, 3, '1', 'CS240821194607116458'),
-(20, 23, 3, '111', 'CS240821204214279395'),
-(21, 24, 3, 'ASAS', 'CS240821205009896355'),
-(22, 25, 3, '10', 'CS240901144903744926'),
-(23, 26, 6, '22', 'CS240901145041457058'),
-(24, 27, 8, '56', 'CS240901145107227115'),
-(25, 28, 5, '22', 'CS240904213937733643'),
-(26, 29, 5, '2', 'CS240904222217803118');
+(27, 32, 3, 'aaa', 'CS240906193535333516'),
+(28, 35, 5, 'sad', 'CS240906200553150346'),
+(29, 33, 6, 'asd', 'CS240906202320657553'),
+(30, 37, 6, 'asd', 'CS240906202349291771'),
+(31, 36, 5, 'asd', 'CS240906202413307212'),
+(32, 38, 5, 'asdsda', 'CS240906202533344103'),
+(33, 34, 5, 'sdf', 'CS240907163201843305'),
+(34, 39, 3, 'asd', 'CS240907185930696462'),
+(35, 40, 5, 'sdf', 'CS240907193909895683');
 
 -- --------------------------------------------------------
 
@@ -196,6 +183,7 @@ CREATE TABLE `panne` (
   `product` int(11) NOT NULL,
   `fournisseur` varchar(55) NOT NULL,
   `sn` varchar(55) NOT NULL,
+  `agent` int(11) NOT NULL,
   `technician` int(11) DEFAULT NULL,
   `workshop` int(11) NOT NULL,
   `panne` int(11) NOT NULL,
@@ -218,23 +206,18 @@ CREATE TABLE `panne` (
 -- Dumping data for table `panne`
 --
 
-INSERT INTO `panne` (`id`, `product`, `fournisseur`, `sn`, `technician`, `workshop`, `panne`, `dateDeclaration`, `ligne`, `dateReparation`, `source`, `etat`, `liberation`, `dateLibiration`, `tempInitial`, `tempFinal`, `dureeDintervention`, `code`, `livraison`, `DateLivraison`) VALUES
-(16, 33, 'ZYNOCODES', 'SN1', 3, 4, 1, '2024-08-21 16:43:29', 'A', '2024-08-21 17:12:33', 'souce1', 'etat1', 1, '2024-08-22 00:00:00', '2024-08-21 16:48:31', '2024-08-21 17:12:33', 1442000, 'PN240821174329792097', 1, '2024-12-01 21:18:19'),
-(17, 34, 'ZYNOCODES', 'SN1', 3, 7, 1, '2024-08-21 17:01:36', 'A', '2024-08-21 17:35:05', 'souce22', NULL, 0, NULL, '2024-08-21 17:12:39', '2024-08-21 17:35:05', 1346000, 'PN240821180136340270', 1, '2024-09-04 21:20:49'),
-(18, 35, 'ZYNOCODES', 'SN1', 3, 4, 1, '2024-08-21 17:02:08', 'A', '2024-08-21 17:40:27', NULL, NULL, 0, NULL, '2024-08-21 17:35:10', '2024-08-21 17:40:27', 317000, 'PN240821180208623217', 0, NULL),
-(19, 34, 'ZYNOCODES', 'SN1', 10, 4, 2, '2024-08-21 17:02:46', 'B', '2024-08-21 17:41:14', NULL, NULL, 1, '2024-08-21 00:00:00', '2024-08-21 17:35:46', '2024-08-21 17:41:14', 328000, 'PN240821180246239169', 0, NULL),
-(20, 36, 'ZYNOCODES', 'SN2', 3, 11, 1, '2024-08-21 17:04:13', 'C', '2024-08-21 18:04:47', NULL, NULL, 0, NULL, '2024-08-21 17:40:32', '2024-08-21 18:04:47', 1455000, 'PN240821180413764813', 0, NULL),
-(21, 37, 'ZYNOCODES', 'SN2', 10, 7, 2, '2024-08-21 18:03:17', 'C', '2024-08-21 18:43:50', NULL, NULL, 0, NULL, '2024-08-21 18:04:18', '2024-08-21 18:43:50', 2372000, 'PN240821190317417179', 0, NULL),
-(22, 38, 'ZYNOCODES', 'SN3', 11, 4, 1, '2024-08-21 18:44:50', 'B', '2024-08-21 18:46:13', NULL, NULL, 0, NULL, '2024-08-21 18:45:54', '2024-08-21 18:46:13', 19000, 'PN240821194450716377', 0, NULL),
-(23, 39, 'ZYNOCODES', 'SN5', 3, 4, 8, '2024-08-21 19:33:13', 'B', '2024-08-21 19:42:18', 'souce1', NULL, 1, '2024-08-21 00:00:00', '2024-08-21 19:34:04', '2024-08-21 19:42:18', 494000, 'PN240821203313665009', 0, NULL),
-(24, 40, 'ZYNOCODES', 'SN', 3, 7, 9, '2024-08-21 19:33:46', 'A', '2024-08-21 19:50:43', 'souce1', '2222', 1, '2024-08-22 00:00:00', '2024-08-21 19:42:22', '2024-08-21 19:50:43', 501000, 'PN240821203346848046', 0, NULL),
-(25, 41, 'ZYNOCODES', 'SN', 3, 7, 9, '2024-08-21 19:49:07', 'A', '2024-09-01 13:49:06', NULL, NULL, 0, NULL, '2024-08-21 19:50:55', '2024-09-01 13:49:06', 928691000, 'PN240821204907958448', 0, NULL),
-(26, 42, 'ZYNOCODES', 'SN', 11, 4, 1, '2024-09-01 13:50:08', 'S', '2024-09-01 13:50:44', NULL, NULL, 0, NULL, '2024-09-01 13:50:29', '2024-09-01 13:50:44', 15000, 'PN240901145008418605', 0, NULL),
-(27, 43, 'ZYNOCODES', 'SN', 11, 7, 2, '2024-09-01 13:50:20', 'C', '2024-09-01 13:51:11', NULL, NULL, 0, NULL, '2024-09-01 13:50:50', '2024-09-01 13:51:11', 21000, 'PN240901145020833755', 0, NULL),
-(28, 44, 'ZYNOCODES', 'SN', 3, 12, 1, '2024-09-04 19:47:00', 'B', '2024-09-04 20:42:42', '1111', '2222', 1, '2024-09-05 00:00:00', '2024-09-04 20:37:14', '2024-09-04 20:42:42', 328000, 'PN240904204700594506', 0, NULL),
-(29, 45, 'qqqqqqq', 'qq', 10, 11, 1, '2024-09-04 20:43:13', 'qq', '2024-09-04 21:22:20', NULL, NULL, 0, NULL, '2024-09-04 20:43:30', '2024-09-04 21:22:20', 2330000, 'PN240904214313820988', 1, '2024-09-04 21:22:46'),
-(30, 46, 'aa', 'aa', 3, 13, 1, '2024-09-04 20:43:25', 'aa', NULL, NULL, NULL, 0, NULL, '2024-09-04 20:56:01', NULL, NULL, 'PN240904214325447117', 0, NULL),
-(31, 47, 'aaa', 'aaa', 11, 12, 1, '2024-09-04 20:56:43', 'aaa', NULL, NULL, NULL, 0, NULL, '2024-09-04 20:57:32', NULL, NULL, 'PN240904215643219041', 0, NULL);
+INSERT INTO `panne` (`id`, `product`, `fournisseur`, `sn`, `agent`, `technician`, `workshop`, `panne`, `dateDeclaration`, `ligne`, `dateReparation`, `source`, `etat`, `liberation`, `dateLibiration`, `tempInitial`, `tempFinal`, `dureeDintervention`, `code`, `livraison`, `DateLivraison`) VALUES
+(32, 48, 'aa', 'aa', 8, 3, 4, 1, '2024-09-06 18:20:44', 'aa', '2024-09-06 18:35:39', NULL, NULL, 0, NULL, '2024-09-06 18:24:19', '2024-09-06 18:35:39', 680000, 'PN240906192044421084', 1, '2024-09-06 18:35:49'),
+(33, 49, 'fff', 'ff', 9, 3, 11, 8, '2024-09-06 18:31:02', 'fff', '2024-09-06 19:23:23', '1111', '2222', 0, NULL, '2024-09-06 19:19:01', '2024-09-06 19:23:23', 262000, 'PN240906193102890349', 1, '2024-09-06 19:24:22'),
+(34, 50, 'asdsad', 'asd', 8, 10, 4, 2, '2024-09-06 18:43:40', 'asdas', '2024-09-07 15:32:05', NULL, NULL, 0, NULL, '2024-09-06 18:44:33', '2024-09-07 15:32:05', 74852000, 'PN240906194340293298', 1, '2024-09-07 17:59:50'),
+(35, 51, 'asdsa', 'asd', 9, 3, 12, 9, '2024-09-06 18:46:01', 'asdas', '2024-09-06 19:11:42', 'sdadsa', 'asddas', 0, NULL, '2024-09-06 18:47:02', '2024-09-06 19:11:42', 1480000, 'PN240906194601925498', 1, '2024-09-06 19:14:03'),
+(36, 52, 'asdasd', 'adsasd', 9, 11, 13, 9, '2024-09-06 19:19:15', 'asdasd', '2024-09-06 19:24:15', NULL, NULL, 0, NULL, '2024-09-06 19:19:39', '2024-09-06 19:24:15', 276000, 'PN240906201915526741', 0, NULL),
+(37, 53, 'asddas', 'ads', 9, 3, 7, 2, '2024-09-06 19:23:00', 'asd', '2024-09-06 19:23:52', 'asd', 'asda', 0, NULL, '2024-09-06 19:23:32', '2024-09-06 19:23:52', 20000, 'PN240906202300227112', 0, NULL),
+(38, 52, 'asdasd', 'asd', 9, 3, 11, 7, '2024-09-06 19:24:33', 'asdsda', '2024-09-06 19:26:10', 'asddsa', 'asd', 0, NULL, '2024-09-06 19:24:40', '2024-09-06 19:26:10', 90000, 'PN240906202433713072', 0, NULL),
+(39, 54, 'sefsef', 'sefsef', 8, 3, 7, 7, '2024-09-07 15:31:10', 'sefse', '2024-09-07 17:59:33', NULL, NULL, 0, NULL, '2024-09-07 15:32:13', '2024-09-07 17:59:33', 8840000, 'PN240907163110902811', 1, '2024-09-07 18:40:57'),
+(40, 55, 'sdfdfs', 'dfsdf', 8, 3, 11, 15, '2024-09-07 18:38:35', 'sdfsdf', '2024-09-07 18:39:12', NULL, NULL, 0, NULL, '2024-09-07 18:38:59', '2024-09-07 18:39:12', 13000, 'PN240907193835538330', 0, NULL),
+(41, 55, 'sdffds', 'sdf', 8, 3, 4, 9, '2024-09-07 18:38:45', 'sfdsdf', NULL, NULL, NULL, 0, NULL, '2024-09-07 18:39:18', NULL, NULL, 'PN240907193845467322', 0, NULL),
+(42, 55, 'sdffds', 'sfdsdf', 8, NULL, 7, 2, '2024-09-07 18:38:55', 'sdfsdf', NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 'PN240907193855710261', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -293,7 +276,15 @@ INSERT INTO `product` (`id`, `marque`, `model`, `lot`, `family`, `zone`, `code`)
 (44, 'adsads', 'adasd', 'asdsad', 3, 3, 'P240904204700323492'),
 (45, 'qqqqqqqqqqqqqqqqqqq', 'qqqqqqqqqq', 'qqqqqqqq', 3, 3, 'P240904214313568379'),
 (46, 'aaaaaaaaaaaa', 'aaaa', 'aa', 4, 3, 'P240904214325138111'),
-(47, 'aaa', 'aaa', 'aaa', 3, 3, 'P240904215643444683');
+(47, 'aaa', 'aaa', 'aaa', 3, 3, 'P240904215643444683'),
+(48, 'aa', 'aaaaaaaaaaaaaaaaaaaaaaaa', 'aa', 4, 3, 'P240906192044847622'),
+(49, 'ffffffffff', 'ffff', 'fff', 5, 3, 'P240906193102951060'),
+(50, 'sdaasdasd', 'assdad', 'asdasd', 5, 3, 'P240906194340461104'),
+(51, 'adsad', 'asdas', 'dasda', 3, 3, 'P240906194601407381'),
+(52, 'asdas', 'asdasd', 'asdasd', 4, 3, 'P240906201915672605'),
+(53, 'asdasd', 'dsasda', 'dasdas', 4, 3, 'P240906202300289389'),
+(54, 'esdfes', 'sefse', 'fsefse', 4, 3, 'P240907163110412155'),
+(55, 'sdfsdf', 'sdfsdf', 'sdfsdf', 3, 3, 'P240907193835141001');
 
 -- --------------------------------------------------------
 
@@ -330,20 +321,24 @@ INSERT INTO `technician` (`id`, `username`, `password`, `fullname`, `phoneNumber
 CREATE TABLE `typepanne` (
   `id` int(11) NOT NULL,
   `code` varchar(55) NOT NULL,
-  `name` varchar(55) NOT NULL
+  `name` varchar(55) NOT NULL,
+  `duree` varchar(55) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `typepanne`
 --
 
-INSERT INTO `typepanne` (`id`, `code`, `name`) VALUES
-(1, 'PT2408211725488099', 'TYPE1'),
-(2, 'PT2408211727092607', 'TYPE2'),
-(6, 'PT2408212030495995', 'TYPE3'),
-(7, 'PT2408212031195341', 'TYPE4'),
-(8, 'PT2408212031254323', 'TYPE5'),
-(9, 'PT2408212031328369', 'TYPE6');
+INSERT INTO `typepanne` (`id`, `code`, `name`, `duree`) VALUES
+(1, 'PT2408211725488099', 'TYPE1', '120'),
+(2, 'PT2408211727092607', 'TYPE2', '18000'),
+(6, 'PT2408212030495995', 'TYPE3', '172800'),
+(7, 'PT2408212031195341', 'TYPE4', '8820'),
+(8, 'PT2408212031254323', 'TYPE5', '0'),
+(9, 'PT2408212031328369', 'TYPE6', '0'),
+(14, 'PT2409071746572516', 'TYPE11', '300'),
+(15, 'PT2409071802362293', 'TYPE13', '60'),
+(16, 'PT2409071802495798', 'TYPE14', '86400');
 
 -- --------------------------------------------------------
 
@@ -451,7 +446,8 @@ ALTER TABLE `panne`
   ADD KEY `idx_panne_technician_dateReparation` (`technician`,`dateReparation`),
   ADD KEY `idx_panne_dateReparation` (`dateReparation`),
   ADD KEY `idx_panne_dureeDintervention` (`dureeDintervention`),
-  ADD KEY `idx_panne_typepanne` (`panne`);
+  ADD KEY `idx_panne_typepanne` (`panne`),
+  ADD KEY `idx_panne_agent` (`agent`);
 
 --
 -- Indexes for table `piece`
@@ -507,19 +503,19 @@ ALTER TABLE `action`
 -- AUTO_INCREMENT for table `actioncorrective`
 --
 ALTER TABLE `actioncorrective`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `agent`
 --
 ALTER TABLE `agent`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `consommation`
 --
 ALTER TABLE `consommation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `family`
@@ -537,7 +533,7 @@ ALTER TABLE `manager`
 -- AUTO_INCREMENT for table `panne`
 --
 ALTER TABLE `panne`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `piece`
@@ -549,7 +545,7 @@ ALTER TABLE `piece`
 -- AUTO_INCREMENT for table `product`
 --
 ALTER TABLE `product`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `technician`
@@ -561,7 +557,7 @@ ALTER TABLE `technician`
 -- AUTO_INCREMENT for table `typepanne`
 --
 ALTER TABLE `typepanne`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `workshop`
@@ -609,6 +605,7 @@ ALTER TABLE `manager`
 -- Constraints for table `panne`
 --
 ALTER TABLE `panne`
+  ADD CONSTRAINT `fk_panne_agent` FOREIGN KEY (`agent`) REFERENCES `agent` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_panne_typepanne` FOREIGN KEY (`panne`) REFERENCES `typepanne` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `idx_panne_product` FOREIGN KEY (`product`) REFERENCES `product` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `idx_panne_technician` FOREIGN KEY (`technician`) REFERENCES `technician` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
