@@ -32,6 +32,14 @@ const Panne = sequelize.define('panne', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    agent: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'agent',
+            key: 'id'
+        }
+    },
     technician: {
         type: DataTypes.INTEGER,
         allowNull: true,

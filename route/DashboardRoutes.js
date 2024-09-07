@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     CountAllPannes,
     CountPannesBetweenSEDate,
+    CountPannesToday,
     CountPannesByMonth,
     CountTopPannes,
     CountTopActionsCorrectives,
@@ -17,9 +18,12 @@ const limiterForGet = require('../middleware/RateLimiterForGet.js');
 router.use(requireAuth);
 
 //SHEARED ROUTES
-//MANAGER ROUTES
 // count all pannes
-router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountAllPannes);
+router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), CountAllPannes);
+//count pannes of today
+router.get('/count/today', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), CountPannesToday);
+
+//MANAGER ROUTES
 //count pannes between start and end date
 router.get('/count', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountPannesBetweenSEDate);
 //count pannes by month

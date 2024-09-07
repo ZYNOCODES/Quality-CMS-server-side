@@ -18,6 +18,7 @@ const PanneService = require('../service/PanneService.js');
 const ConsommationService = require('../service/ConsommationService.js');
 const ActionCorrectiveService = require('../service/ActionCorrectiveService.js');
 const PanneTypeService = require('../service/PanneTypeService.js');
+const UserService = require('../service/UsersService.js');
 const moment = require('moment');
 require('moment-timezone');
 
@@ -181,8 +182,8 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
     // Respond with the panne
     res.status(200).json(existingPanne);
 });
-// get all pannes by zone
-const getAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
+// get all pannes by Agent
+const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
 
     // Validate required fields
@@ -190,25 +191,16 @@ const getAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
-    //check if the zone exists
-    const existingZone = await ZoneService.findZoneByCode(code);
-    if (!existingZone) {
-        return next(new CustomError('Zone non trouvée', 404));
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(code);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
 
-    // get all workshops related to zone
-    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
-    if (existingWorkshops.length <= 0) {
-        return next(new CustomError('Aucun atelier trouvée dans cette zone', 404));
-    }
-    
-    // Extract workshop IDs
-    const workshopIds = existingWorkshops.map(workshop => workshop.id);
-
-    // Get all pannes by zone
+    // Get all pannes by Agent
     const pannes = await Panne.findAll({
         where: {
-            workshop: workshopIds,
+            agent: existingAgent.id,
             technician: null,
             dateReparation: null
         },
@@ -264,8 +256,8 @@ const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
     // Respond with the pannes
     res.status(200).json(pannes);
 });
-// get all taken pannes by zone
-const getAllTakenPannesByZone = asyncErrorHandler(async (req, res, next) => {
+// get all taken pannes by Agent
+const getAllTakenPannesByAgent = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
 
     // Validate required fields
@@ -273,25 +265,16 @@ const getAllTakenPannesByZone = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
-    //check if the zone exists
-    const existingZone = await ZoneService.findZoneByCode(code);
-    if (!existingZone) {
-        return next(new CustomError('Zone non trouvée', 404));
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(code);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
-
-    // get all workshops related to zone
-    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
-    if (existingWorkshops.length <= 0) {
-        return next(new CustomError('Aucun atelier trouvée dans cette zone', 404));
-    }
-    
-    // Extract workshop IDs
-    const workshopIds = existingWorkshops.map(workshop => workshop.id);
 
     // Get all pannes by zone
     const pannes = await Panne.findAll({
         where: {
-            workshop: workshopIds,
+            agent: existingAgent.id,
             technician: { [Op.ne]: null },
             dateReparation: null
         },
@@ -348,8 +331,8 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
     // Respond with the pannes
     res.status(200).json(pannes);
 });
-// get all non delivred pannes by zone
-const getAllNoneDelivredPannesByZone = asyncErrorHandler(async (req, res, next) => {
+// get all non delivred pannes by Agent
+const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
 
     // Validate required fields
@@ -357,25 +340,16 @@ const getAllNoneDelivredPannesByZone = asyncErrorHandler(async (req, res, next) 
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
-    //check if the zone exists
-    const existingZone = await ZoneService.findZoneByCode(code);
-    if (!existingZone) {
-        return next(new CustomError('Zone non trouvée', 404));
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(code);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
-
-    // get all workshops related to zone
-    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
-    if (existingWorkshops.length <= 0) {
-        return next(new CustomError('Aucun atelier trouvée dans cette zone', 404));
-    }
-    
-    // Extract workshop IDs
-    const workshopIds = existingWorkshops.map(workshop => workshop.id);
 
     // Get all pannes by zone
     const pannes = await Panne.findAll({
         where: {
-            workshop: workshopIds,
+            agent: existingAgent.id,
             technician: { [Op.ne]: null },
             dateReparation: { [Op.ne]: null },
             livraison: false
@@ -433,8 +407,8 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
     // Respond with the pannes
     res.status(200).json(pannes);
 });
-// get all clotured pannes by zone
-const getAllCloturedPannesByZone = asyncErrorHandler(async (req, res, next) => {
+// get all clotured pannes by Agent
+const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
 
     // Validate required fields
@@ -442,25 +416,16 @@ const getAllCloturedPannesByZone = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
-    //check if the zone exists
-    const existingZone = await ZoneService.findZoneByCode(code);
-    if (!existingZone) {
-        return next(new CustomError('Zone non trouvée', 404));
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(code);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
-
-    // get all workshops related to zone
-    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
-    if (existingWorkshops.length <= 0) {
-        return next(new CustomError('Aucun atelier trouvée dans cette zone', 404));
-    }
-    
-    // Extract workshop IDs
-    const workshopIds = existingWorkshops.map(workshop => workshop.id);
 
     // Get all pannes by zone
     const pannes = await Panne.findAll({
         where: {
-            workshop: workshopIds,
+            agent: existingAgent.id,
             technician: { [Op.ne]: null },
             dateReparation: { [Op.ne]: null },
             livraison: true
@@ -536,10 +501,10 @@ const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
 });
 // first panne step
 const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
+    const { agent } = req.params;
     const { marque, model, sn, lot, family, workshop, fournisseur, panne, ligne } = req.body;
-
     // Validate required fields
-    if ([ marque, model, sn, lot, family, workshop, fournisseur, panne, ligne].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([ agent, marque, model, sn, lot, family, workshop, fournisseur, panne, ligne].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
@@ -547,12 +512,13 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     const transaction = await sequelize.transaction();
     try {
         // Validate existence of related entities
-        const [existingFamily , existingWorkshop , existingPanneType] = await Promise.all([
+        const [existingFamily , existingWorkshop , existingPanneType, existingAgent] = await Promise.all([
             FamilyService.findFamilyByCode(family),
             WorkshopService.findWorkshopByCode(workshop),
-            PanneTypeService.findPanneTypeByCode(panne)
+            PanneTypeService.findPanneTypeByCode(panne),
+            UserService.findAgentByCode(agent),
         ]);
-
+        if (!existingAgent) return next(new CustomError('Agent non trouvé', 404));
         if (!existingFamily) return next(new CustomError('Famille non trouvée', 404));
         if (!existingWorkshop) return next(new CustomError('Atelier non trouvé', 404));
         if (!existingPanneType) return next(new CustomError('Type de panne non trouvé', 404));
@@ -591,6 +557,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
             dateDeclaration,
             fournisseur,
             sn,
+            agent: existingAgent.id,
             panne: existingPanneType.id,
             ligne,
             product: product.id,
@@ -607,17 +574,25 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     } catch (error) {
         // Rollback the transaction in case of error
         await transaction.rollback();
+        console.log(error)
         return next('Error: Internal Server', 500);
     }
 });
 // second panne step
 const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { codeT } = req.body;
+    const { codeT, agent } = req.body;
     // Validate required fields
-    if ([code, codeT].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([code, codeT, agent].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
+
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
+    }
+
     //check if technician exists
     const existingTechnician = await TechnicianService.findTechnicianByCode(codeT);
     if(!existingTechnician){
@@ -628,6 +603,11 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
     const existingPanne = await PanneService.findPanneByCode(code);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+    
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if technician have current panne in progress
@@ -662,16 +642,31 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
 // third panne step
 const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { source, etat, liberation, DateLiberation } = req.body;
+    const { source, etat, liberation, DateLiberation, agent } = req.body;
     // Validate required fields
-    if ([code, source, etat, DateLiberation].every(field => !field || validator.isEmpty(field.toString()))) {
+    if ([code, agent].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    // Validate required fields
+    if ([source, etat, DateLiberation].every(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
+    }
+
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
 
     //check if panne exists
     const existingPanne = await PanneService.findPanneByCode(code);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if the panne is submitted to second scan
@@ -708,15 +703,27 @@ const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
 // fourth panne step
 const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
+    const { agent } = req.body;
     // Validate required fields
-    if ([code].every(field => !field || validator.isEmpty(field.toString()))) {
-        return next(new CustomError('Un des champs doivent être remplis', 400));
+    if ([code, agent].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tout les champs doivent être remplis', 400));
+    }
+
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
 
     //check if panne exists
     const existingPanne = await PanneService.findPanneByCode(code);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if the panne is submitted to second scan
@@ -773,15 +780,27 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
 // make panne delivred
 const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
+    const { agent } = req.body;
     // Validate required fields
-    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([code, agent].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
 
     //check if panne exists
     const existingPanne = await PanneService.findPanneByCode(code);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if this panne is clotured
@@ -810,15 +829,27 @@ const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {
 // delete panne
 const DeletePanne = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
+    const { agent } = req.body;
     // Validate required fields
-    if ([code].every(field => !field || validator.isEmpty(field.toString()))) {
+    if ([code, agent].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
+    }
+
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
 
     //check if panne exists
     const existingPanne = await PanneService.findPanneByCode(code);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if there is consommation and actioncorrective related to this panne
@@ -841,13 +872,13 @@ module.exports = {
     getAllArchivePannesByTechnician,
     getSpecificPanne,
     getAllPannes,
-    getAllPannesByZone,
+    getAllPannesByAgent,
     getAllTakenPannes,
-    getAllTakenPannesByZone,
+    getAllTakenPannesByAgent,
     getAllCloturedPannes,
     getAllNoneDelivredPannes,
-    getAllNoneDelivredPannesByZone,
-    getAllCloturedPannesByZone,
+    getAllNoneDelivredPannesByAgent,
+    getAllCloturedPannesByAgent,
     firstPanneStep,
     secondPanneStep,
     thirdPanneStep,

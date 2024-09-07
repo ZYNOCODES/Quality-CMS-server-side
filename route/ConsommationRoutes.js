@@ -24,6 +24,6 @@ router.post('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), Cre
 //update consommation PDR
 router.patch('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), UpdateConsommation);
 //delete consommation PDR
-router.delete('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeleteConsommation);
+router.delete('/:code/:agent', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeleteConsommation);
 
 module.exports = router;

@@ -31,7 +31,18 @@ const findUserByZone = async (zone) => {
         )
     );
 }
+const findAgentByCode = async (code) => {
+    return await Agent.findOne(
+            {
+                where: {
+                    code
+                },
+            }
+        )
+    ;
+}
 
 module.exports = {
-    findUserByZone
+    findUserByZone,
+    findAgentByCode
 }

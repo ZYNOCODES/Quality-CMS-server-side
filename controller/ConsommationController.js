@@ -7,6 +7,7 @@ const { generateUniqueCode } = require('../util/Codification.js');
 const PanneService = require('../service/PanneService.js');
 const PieceService = require('../service/PieceService.js');
 const ConsommationService = require('../service/ConsommationService.js');
+const UserService = require('../service/UsersService.js');
 
 //get all consommation pdr by panne
 const GetAllConsommationsByPanne = asyncErrorHandler(async (req, res, next) => {
@@ -43,16 +44,27 @@ const GetAllConsommationsByPanne = asyncErrorHandler(async (req, res, next) => {
 //create consommation pdr
 const CreateConsommation = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { piece, quantity } = req.body;
+    const { piece, quantity, agent } = req.body;
     // Validate required fields
-    if ([code, piece].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([code, piece, agent].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
 
     //check if panne exists
     const existingPanne = await PanneService.findPanneByCode(code);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if the panne is submitted to second scan
@@ -146,10 +158,19 @@ const UpdateConsommation = asyncErrorHandler(async (req, res, next) => {
 });
 //delete consommation PDR
 const DeleteConsommation = asyncErrorHandler(async (req, res, next) => {
-    const { code } = req.params;
+    const { code, agent } = req.params;
+
     //check if name is provided
-    if (!code || validator.isEmpty(code)) {
+    if (!code || validator.isEmpty(code) ||
+        !agent || validator.isEmpty(agent)
+    ) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
 
     //check if consommation PDR exists
@@ -162,6 +183,11 @@ const DeleteConsommation = asyncErrorHandler(async (req, res, next) => {
     const existingPanne = await PanneService.findPanneById(existingConsommation.panne);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if the panne is already closed

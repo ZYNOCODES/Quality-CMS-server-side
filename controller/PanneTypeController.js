@@ -17,7 +17,6 @@ const GetAllPanneTypes = asyncErrorHandler(async (req, res, next) => {
 //create a new PanneType
 const CreatePanneType = asyncErrorHandler(async (req, res, next) => {
     const { name, duree } = req.body;
-
     // Check if the name is provided
     if (!name || validator.isEmpty(name)) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
@@ -63,6 +62,7 @@ const CreatePanneType = asyncErrorHandler(async (req, res, next) => {
 const UpdatePanneType = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
     const { name, duree } = req.body;
+
     //check if name is provided
     if ((!name || validator.isEmpty(name))
         && (!duree || validator.isEmpty(duree))

@@ -66,7 +66,7 @@ const CountPannesBetweenSEDate = asyncErrorHandler(async (req, res, next) => {
     const adjustedEnd = parsedEnd.endOf('day').toDate();
 
     // Count Pannes with date range filter
-    const [enAttenteCount, enReparationCount, repareCount] = await Promise.all([
+    const [enAttenteCount, enReparationCount, NoneDelivredrepareCount, DelivredrepareCount] = await Promise.all([
         Panne.count({
             where: {
                 technician: null,
@@ -89,13 +89,23 @@ const CountPannesBetweenSEDate = asyncErrorHandler(async (req, res, next) => {
                 dateReparation: { [Op.ne]: null },
                 dateDeclaration: {
                     [Op.between]: [adjustedStart, adjustedEnd]
-                }
+                },
+                livraison: false
+            }
+        }),
+        Panne.count({
+            where: {
+                dateReparation: { [Op.ne]: null },
+                dateDeclaration: {
+                    [Op.between]: [adjustedStart, adjustedEnd]
+                },
+                livraison: true
             }
         })
     ]);
 
     // Check if the counts are valid
-    if (enAttenteCount === null || enReparationCount === null || repareCount === null) {
+    if(!enAttenteCount === null || !enReparationCount === null || !NoneDelivredrepareCount === null || !DelivredrepareCount === null){
         return next(new CustomError('Une erreur s\'est produite lors du comptage des pannes', 500));
     }
 
@@ -103,7 +113,69 @@ const CountPannesBetweenSEDate = asyncErrorHandler(async (req, res, next) => {
     res.status(200).json({
         EnAttente: enAttenteCount,
         EnReparation: enReparationCount,
-        Repare: repareCount
+        NoneDelivredrepare: NoneDelivredrepareCount,
+        Delivredrepare: DelivredrepareCount
+    });
+});
+// count pannes between start and end date
+const CountPannesToday = asyncErrorHandler(async (req, res, next) => {
+    // Parse the start and end dates using moment
+    const currentDate = moment().tz('Africa/Algiers');
+
+    // Adjust dates to ignore the time part
+    const adjustedStart = currentDate.startOf('day').toDate();
+    const adjustedEnd = currentDate.endOf('day').toDate();
+
+    // Count Pannes with date range filter
+    const [enAttenteCount, enReparationCount, NoneDelivredrepareCount, DelivredrepareCount] = await Promise.all([
+        Panne.count({
+            where: {
+                technician: null,
+                dateDeclaration: {
+                    [Op.between]: [adjustedStart, adjustedEnd]
+                }
+            }
+        }),
+        Panne.count({
+            where: {
+                technician: { [Op.ne]: null },
+                dateReparation: null,
+                dateDeclaration: {
+                    [Op.between]: [adjustedStart, adjustedEnd]
+                }
+            }
+        }),
+        Panne.count({
+            where: {
+                dateReparation: { [Op.ne]: null },
+                dateDeclaration: {
+                    [Op.between]: [adjustedStart, adjustedEnd]
+                },
+                livraison: false
+            }
+        }),
+        Panne.count({
+            where: {
+                dateReparation: { [Op.ne]: null },
+                dateDeclaration: {
+                    [Op.between]: [adjustedStart, adjustedEnd]
+                },
+                livraison: true
+            }
+        })
+    ]);
+
+    // Check if the counts are valid
+    if(!enAttenteCount === null || !enReparationCount === null || !NoneDelivredrepareCount === null || !DelivredrepareCount === null){
+        return next(new CustomError('Une erreur s\'est produite lors du comptage des pannes', 500));
+    }
+
+    // Return the results
+    res.status(200).json({
+        EnAttente: enAttenteCount,
+        EnReparation: enReparationCount,
+        NoneDelivredrepare: NoneDelivredrepareCount,
+        Delivredrepare: DelivredrepareCount
     });
 });
 // count pannes for every month of this year
@@ -323,6 +395,7 @@ const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
 module.exports = {
     CountAllPannes,
     CountPannesBetweenSEDate,
+    CountPannesToday,
     CountPannesByMonth,
     CountTopPannes,
     CountTopActionsCorrectives,

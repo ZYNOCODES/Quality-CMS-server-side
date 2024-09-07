@@ -22,7 +22,7 @@ router.get('/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE
 //update action corrective
 router.patch('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), UpdateActionCorrective);
 //delete action corrective
-router.delete('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeleteActionCorrective);
+router.delete('/:code/:agent', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeleteActionCorrective);
 //create a new action corrective
 router.post('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), CreateActionCorrective);
 

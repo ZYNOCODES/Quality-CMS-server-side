@@ -5,13 +5,13 @@ const {
     getAllArchivePannesByTechnician,
     getAllPannes,
     getSpecificPanne,
-    getAllPannesByZone,
+    getAllPannesByAgent,
     getAllTakenPannes,
-    getAllTakenPannesByZone,
+    getAllTakenPannesByAgent,
     getAllCloturedPannes,
     getAllNoneDelivredPannes,
-    getAllNoneDelivredPannesByZone,
-    getAllCloturedPannesByZone,
+    getAllNoneDelivredPannesByAgent,
+    getAllCloturedPannesByAgent,
     GetPannesByProduct,
     firstPanneStep,
     secondPanneStep,
@@ -48,19 +48,19 @@ router.get('/nonedelivred', limiterForGet, checkAuthorization([process.env.MANAG
 
 //AGENT ROUTES
 // get all pannes by zone
-router.get('/byzone/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllPannesByZone);
+router.get('/byagent/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllPannesByAgent);
 // get all taken pannes by zone
-router.get('/linked/byzone/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllTakenPannesByZone);
+router.get('/linked/byagent/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllTakenPannesByAgent);
 //get all clotured pannes by zone
-router.get('/nonedelivred/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllNoneDelivredPannesByZone);
+router.get('/nonedelivred/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllNoneDelivredPannesByAgent);
 //get all clotured pannes by zone
-router.get('/archive/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllCloturedPannesByZone); 
-//create a new panne
-router.post('/first', limiter, checkAuthorization([process.env.AGENT_TYPE]), firstPanneStep);
+router.get('/archive/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllCloturedPannesByAgent); 
 //delete panne
 router.delete('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeletePanne);
 //get all pannes by technician
 router.get('/technician/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllPannesByTechnician);
+//create a new panne
+router.post('/first/:agent', limiter, checkAuthorization([process.env.AGENT_TYPE]), firstPanneStep);
 // second update panne 
 router.patch('/second/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), secondPanneStep);
 // third update panne

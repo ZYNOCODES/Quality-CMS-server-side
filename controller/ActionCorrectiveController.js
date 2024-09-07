@@ -6,6 +6,7 @@ const validator = require('validator');
 const { generateUniqueCode } = require('../util/Codification.js');
 const PanneService = require('../service/PanneService.js');
 const ActionService = require('../service/ActionService.js');
+const UserService = require('../service/UsersService.js');
 const ActionCorrectiveService = require('../service/ActionCorrectiveService.js');
 const moment = require('moment');
 require('moment-timezone');
@@ -45,9 +46,9 @@ const GetAllActionsCorrectiveByPanne = asyncErrorHandler(async (req, res, next) 
 //create action corrective
 const CreateActionCorrective = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { action, mesure, resultat } = req.body;
+    const { action, mesure, resultat, agent } = req.body;
     // Validate required fields
-    if ([code, action].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([code, action, agent].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
     //Validate one of the optional fields
@@ -55,10 +56,21 @@ const CreateActionCorrective = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Au moins un des champs optionnels doit être rempli', 400));
     }
 
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
+    }
+
     //check if panne exists
     const existingPanne = await PanneService.findPanneByCode(code);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if the panne is submitted to second scan
@@ -160,10 +172,18 @@ const UpdateActionCorrective = asyncErrorHandler(async (req, res, next) => {
 });
 //delete action corrective
 const DeleteActionCorrective = asyncErrorHandler(async (req, res, next) => {
-    const { code } = req.params;
+    const { code, agent } = req.params;
     //check if name is provided
-    if (!code || validator.isEmpty(code)) {
+    if (!code || validator.isEmpty(code) ||
+        !agent || validator.isEmpty(agent)
+    ) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
     }
 
     //check if action corrective exists
@@ -176,6 +196,11 @@ const DeleteActionCorrective = asyncErrorHandler(async (req, res, next) => {
     const existingPanne = await PanneService.findPanneById(existingActionCorrective.panne);
     if(!existingPanne){
         return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if its the same agent who create this panne
+    if(existingAgent.id != existingPanne.agent){
+        return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
     //check if the panne is already closed
