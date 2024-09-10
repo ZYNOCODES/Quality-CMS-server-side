@@ -9,6 +9,10 @@ const Displayer = sequelize.define('displayer', {
         allowNull: false,
         autoIncrement: true,
     },
+    code:{
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     username:{
         type: DataTypes.STRING,
         allowNull: false,

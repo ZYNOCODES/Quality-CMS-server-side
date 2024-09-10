@@ -23,6 +23,7 @@ const DashboardRoutes = require('./route/DashboardRoutes');
 const PanneTypeRoutes = require('./route/PanneTypeRoutes');
 const TechnicianRoutes = require('./route/TechnicianRoutes');
 const AgentRoutes = require('./route/AgentRoutes');
+const DisplayerRoutes = require('./route/DisplayerRoutes');
 
 //http server
 const http = require('http');
@@ -57,9 +58,8 @@ app.use('/api/dashboard', DashboardRoutes);
 app.use('/api/pannetype', PanneTypeRoutes);
 app.use('/api/technician', TechnicianRoutes);
 app.use('/api/agent', AgentRoutes);
-app.use('/api/agent', async(req, res, next) => {
-    res.status(404).json({ message: 'Page not found' });
-});
+app.use('/api/displayer', DisplayerRoutes);
+
 //error handling
 app.use(ErrorHandler);
 

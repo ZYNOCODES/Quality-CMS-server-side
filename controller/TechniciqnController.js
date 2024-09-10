@@ -10,14 +10,10 @@ const Zone = require('../model/ZoneModel.js');
 
 // Create a new Technician
 const CreateTechnician = asyncErrorHandler(async (req, res, next) => {
-    const { fullname, phoneNumber, zone } = req.body;
+    const { fullname, zone } = req.body;
     // Check if all required fields are provided
-    if (validator.isEmpty(fullname) || validator.isEmpty(phoneNumber) || validator.isEmpty(zone)) {
+    if (validator.isEmpty(fullname) || validator.isEmpty(zone)) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
-    }
-    // Validate phone number format
-    if (!validator.isMobilePhone(phoneNumber, 'ar-DZ')) {
-        return next(new CustomError('Numéro de téléphone invalide', 400));
     }
 
     // Check if zone is valid
@@ -26,26 +22,24 @@ const CreateTechnician = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Zone invalide', 400));
     }
 
-    // Check if technician already exists
-    const technicianExists = await Technician.findOne({
-        where: {
-            phoneNumber
+    //check if name exists
+    const nameCheck = await Technician.findOne({
+        where:{
+            fullname
         }
     });
-    if (technicianExists) {
-        return next(new CustomError('Technicien existe déjà', 400));
+    if (nameCheck) {
+        return next(new CustomError('Nom de technicien déjà utilisé', 400));
     }
 
 
     // Generate a unique code for the technician
-    const code = generateUniqueCode('T', 8, Technician);
-
+    const code = await generateUniqueCode('T', 8, Technician);
     // Create the technician
     const technician = await Technician.create({
         code,
         fullname,
-        phoneNumber,
-        zone
+        zone: zoneExists.id
     });
 
     //check if technician is created
@@ -106,12 +100,12 @@ const GetTechnicianByZone = asyncErrorHandler(async (req, res, next) => {
 //update specific user
 const UpdateTechnician = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { fullname, zone, phone } = req.body;
+    const { fullname, zone } = req.body;
     //check if name is provided
     if(!code || validator.isEmpty(code)){
         return next(new CustomError('Tout les champs doivent être remplis', 400));
     }
-    if ([fullname, zone, phone].every(field => !field || validator.isEmpty(field.toString()))) {
+    if ([fullname, zone].every(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
     }
 
@@ -128,18 +122,17 @@ const UpdateTechnician = asyncErrorHandler(async (req, res, next) => {
     }
 
     // Update the user
-    if(fullname) existinguser.fullname = fullname;
-    if(phone) {
-        //check if phone number exists
-        let phoneNumberCheck = await Technician.findOne({
+    if(fullname){
+        //check if name exists
+        const nameCheck = await Technician.findOne({
             where:{
-                phoneNumber: phone
+                fullname
             }
         });
-        if (phoneNumberCheck) {
-            return next(new CustomError('Numéro de téléphone déjà utilisé', 400));
-        }  
-        existinguser.phoneNumber = phone;
+        if (nameCheck) {
+            return next(new CustomError('Nom de technicien déjà utilisé', 400));
+        }
+        existinguser.fullname = fullname;
     }
     if(zone) {
         const existingZone = await ZoneService.findZoneByCode(zone);

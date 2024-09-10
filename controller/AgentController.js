@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const Agent = require('../model/AccessAgentModel.js');
 const Displayer = require('../model/DisplayerModel.js');
 const Manager = require('../model/ManagerModel.js');
@@ -109,6 +110,28 @@ const UpdateAgent = asyncErrorHandler(async (req, res, next) => {
     if ([fullname, username, password, zone, phone].every(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
     }
+    // Validate username: only alphanumeric characters are allowed
+    if (username && !validator.isAlphanumeric(username)) {
+        return next(new CustomError('Nom d\'utilisateur invalide : seuls les caractères alphanumériques sont autorisés', 400));
+    }
+
+    // Validate password: ensure it's at least 8 characters long, contains one letter, one number, and one special character
+    if (password && !validator.isStrongPassword(password, {
+        minLength: 8,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1
+    })) {
+        return next(new CustomError('Mot de passe invalide : le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial', 400));
+    }
+
+    // Validate phone number: ensure it's a valid phone number for algerian numbers
+
+    if (phone && !validator.isMobilePhone(phone, 'ar-DZ')
+    ) {
+        return next(new CustomError('Numéro de téléphone invalide : veuillez fournir un numéro de téléphone valide', 400));
+    }
 
     // Find the agent
     const existinguser = await Agent.findOne({
@@ -211,7 +234,7 @@ const DeleteAgent = asyncErrorHandler(async (req, res, next) => {
 
 //find user by username or phone
 const _findUser = async (identifier) => {
-    let user = await AccessAgent.findOne({
+    let user = await Agent.findOne({
         where: {
             [Op.or]: [
                 { username: identifier },

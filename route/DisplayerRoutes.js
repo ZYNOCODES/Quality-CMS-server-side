@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const {
-    GetAllFamilies,
-    CreateFamily,
-    UpdateFamily,
-    DeleteFamily
-} = require('../controller/FamilyController.js');
+    CreateDisplayer,
+    GetAllDisplayers,
+    UpdateDisplayer,
+    DeleteDisplayer
+} = require('../controller/DisplayerController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
 const limiter = require('../middleware/RateLimiting.js');
@@ -17,16 +17,14 @@ router.use(requireAuth);
 //remove spaces from request
 router.use(removeSpacesMiddleware);
 
-//SHARED ROUTES
-//get all familys
-router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllFamilies);
-
 //MANAGER ROUTES
 //create a new family
-router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateFamily);
+router.post('/create', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateDisplayer);
+//get all displayers
+router.get('/all', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), GetAllDisplayers);
 //update family
-router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateFamily);
+router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateDisplayer);
 //delete family
-router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeleteFamily);
+router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeleteDisplayer);
 
 module.exports = router;

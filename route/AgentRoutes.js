@@ -13,9 +13,12 @@ const limiterForGet = require('../middleware/RateLimiterForGet.js');
 const {
     validateSignup
 } = require('../middleware/Validation.js');
+const removeSpacesMiddleware = require('../middleware/RemoveSpacesMiddleware.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
+//remove spaces from request
+router.use(removeSpacesMiddleware);
 
 //MANAGER ROUTES
 //Create a new agent

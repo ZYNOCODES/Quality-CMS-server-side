@@ -3,7 +3,8 @@ const router = express.Router();
 const {
     CountAllPannes,
     CountPannesBetweenSEDate,
-    CountPannesToday,
+    CountAllPannesByZone,
+    CountPannesTodayByZone,
     CountPannesByMonth,
     CountTopPannes,
     CountTopActionsCorrectives,
@@ -13,17 +14,22 @@ const {
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
 const limiterForGet = require('../middleware/RateLimiterForGet.js');
+const removeSpacesMiddleware = require('../middleware/RemoveSpacesMiddleware.js');
 
 //secure all routes below with requireAuth
 router.use(requireAuth);
+//remove spaces from request
+router.use(removeSpacesMiddleware);
 
-//SHEARED ROUTES
-// count all pannes
-router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), CountAllPannes);
-//count pannes of today
-router.get('/count/today', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.TECHNICIAN_TYPE]), CountPannesToday);
+//DISPLAYER ROUTES
+//count pannes of today by zone
+router.get('/count/today/:zone', limiterForGet, checkAuthorization([process.env.DISPLAYER_TYPE]), CountPannesTodayByZone);
+// count all pannes by zone
+router.get('/byzone/:zone', limiterForGet, checkAuthorization([process.env.DISPLAYER_TYPE]), CountAllPannesByZone);
 
 //MANAGER ROUTES
+// count all pannes
+router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountAllPannes);
 //count pannes between start and end date
 router.get('/count', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountPannesBetweenSEDate);
 //count pannes by month

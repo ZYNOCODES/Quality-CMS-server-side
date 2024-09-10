@@ -15,11 +15,6 @@ const Technician = sequelize.define('technician', {
     },
     fullname:{
         type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
-    },
-    phoneNumber:{
-        type: DataTypes.STRING,
         allowNull: false,
     },
     zone: {

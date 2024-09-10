@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const AccessAgent = require('../model/AccessAgentModel.js');
-const Technician = require('../model/TechnicianModel.js');
+const Displayer = require('../model/DisplayerModel.js');
 const Manager = require('../model/ManagerModel.js');
 const CustomError = require('../util/CustomError');
 const asyncErrorHandler = require('../util/asyncErrorHandler');
@@ -44,8 +44,8 @@ const requireAuth = asyncErrorHandler(async (req, res, next) => {
         case process.env.AGENT_TYPE:
             user = await AccessAgent.findByPk(id);
             break;
-        case process.env.TECHNICIAN_TYPE:
-            user = await Technician.findByPk(id);
+        case process.env.DISPLAYER_TYPE:
+            user = await Displayer.findByPk(id);
             break;
         default:
             return next(new CustomError('Authentication rejected', 401));

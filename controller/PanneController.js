@@ -156,7 +156,7 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Technician,
                 as: 'technicianAssociation',
-                attributes: ['code', 'fullname', 'phoneNumber']
+                attributes: ['code', 'fullname']
             },
             {
                 model: Workshop,

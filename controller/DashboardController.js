@@ -1,5 +1,5 @@
 const sequelize = require('../config/Database');
-const { Op, fn, col } = require('sequelize');
+const { Op } = require('sequelize');
 const Panne = require('../model/PanneModel.js');
 const ActionCorrective = require('../model/ActionCorrectiveModel.js');
 const Consommation = require('../model/ConsommationModel.js');
@@ -7,8 +7,11 @@ const Action = require('../model/ActionModel.js');
 const Piece = require('../model/PieceModel.js');
 const PanneType = require('../model/PanneTypeModel.js');
 const Technician = require('../model/TechnicianModel.js');
+const ZoneService = require('../service/ZoneService.js');
+const WorkshopService = require('../service/WorkshopService.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
+const validator = require('validator');
 const moment = require('moment');
 require('moment-timezone');
 
@@ -118,7 +121,101 @@ const CountPannesBetweenSEDate = asyncErrorHandler(async (req, res, next) => {
     });
 });
 // count pannes between start and end date
-const CountPannesToday = asyncErrorHandler(async (req, res, next) => {
+const CountAllPannesByZone = asyncErrorHandler(async (req, res, next) => {
+    const { zone } = req.params;
+    
+    //check if zone is provided
+    if (!zone || validator.isEmpty(zone)) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    
+    //check if zone exist
+    const existingZone = await ZoneService.findZoneByCode(zone);
+    if (!existingZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
+
+    //get all workshops of this zone
+    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
+    if (!existingWorkshops || existingWorkshops <= 0) {
+        return res.status(200).json({
+            EnAttente: 0,
+            EnReparation: 0,
+            NoneDelivredrepare: 0,
+            Delivredrepare: 0
+        });
+    }
+    // Extract workshop IDs
+    const workshopIds = existingWorkshops.map(workshop => workshop.id);
+    // Count Pannes for each condition
+    const [enAttenteCount, enReparationCount, NoneDelivredrepareCount, DelivredrepareCount] = await Promise.all([
+        Panne.count({ 
+            where: { 
+                technician: null,
+                workshop: workshopIds,
+            } 
+        }),
+        Panne.count({
+            where: {
+                workshop: workshopIds,
+                technician: { [Op.ne]: null },
+                dateReparation: null
+            }
+        }),
+        Panne.count({
+            where: { 
+                workshop: workshopIds,
+                dateReparation: { [Op.ne]: null },
+                livraison: false
+            }
+        }),
+        Panne.count({
+            where: { 
+                workshop: workshopIds,
+                dateReparation: { [Op.ne]: null },
+                livraison: true
+            }
+        }),
+    ]);
+    // Check if the counts are valid
+    if(!enAttenteCount === null || !enReparationCount === null || !NoneDelivredrepareCount === null || !DelivredrepareCount === null){
+        return next(new CustomError('Une erreur s\'est produite lors du comptage des pannes', 500));
+    }
+    // Return the results
+    res.status(200).json({
+        EnAttente: enAttenteCount,
+        EnReparation: enReparationCount,
+        NoneDelivredrepare: NoneDelivredrepareCount,
+        Delivredrepare: DelivredrepareCount
+    });
+});
+// count pannes between start and end date
+const CountPannesTodayByZone = asyncErrorHandler(async (req, res, next) => {
+    const { zone } = req.params;
+    //check if zone is provided
+    if (!zone || validator.isEmpty(zone)) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if zone exist
+    const existingZone = await ZoneService.findZoneByCode(zone);
+    if (!existingZone) {
+        return next(new CustomError('Zone non trouvée', 404));
+    }
+
+    //get all workshops of this zone
+    const existingWorkshops = await WorkshopService.findAllWorkshopsByZone(existingZone.id);
+    if (!existingWorkshops || existingWorkshops <= 0) {
+        return res.status(200).json({
+            EnAttente: 0,
+            EnReparation: 0,
+            NoneDelivredrepare: 0,
+            Delivredrepare: 0
+        });
+    }
+    // Extract workshop IDs
+    const workshopIds = existingWorkshops.map(workshop => workshop.id);
+
     // Parse the start and end dates using moment
     const currentDate = moment().tz('Africa/Algiers');
 
@@ -130,6 +227,7 @@ const CountPannesToday = asyncErrorHandler(async (req, res, next) => {
     const [enAttenteCount, enReparationCount, NoneDelivredrepareCount, DelivredrepareCount] = await Promise.all([
         Panne.count({
             where: {
+                workshop: workshopIds,
                 technician: null,
                 dateDeclaration: {
                     [Op.between]: [adjustedStart, adjustedEnd]
@@ -138,6 +236,7 @@ const CountPannesToday = asyncErrorHandler(async (req, res, next) => {
         }),
         Panne.count({
             where: {
+                workshop: workshopIds,
                 technician: { [Op.ne]: null },
                 dateReparation: null,
                 dateDeclaration: {
@@ -147,6 +246,7 @@ const CountPannesToday = asyncErrorHandler(async (req, res, next) => {
         }),
         Panne.count({
             where: {
+                workshop: workshopIds,
                 dateReparation: { [Op.ne]: null },
                 dateDeclaration: {
                     [Op.between]: [adjustedStart, adjustedEnd]
@@ -156,6 +256,7 @@ const CountPannesToday = asyncErrorHandler(async (req, res, next) => {
         }),
         Panne.count({
             where: {
+                workshop: workshopIds,
                 dateReparation: { [Op.ne]: null },
                 dateDeclaration: {
                     [Op.between]: [adjustedStart, adjustedEnd]
@@ -339,7 +440,7 @@ const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Technician,
                 as: 'technicianAssociation',
-                attributes: ['code', 'fullname', 'phoneNumber']
+                attributes: ['code', 'fullname']
             }
         ],
         group: ['technician', 'technicianAssociation.id'],
@@ -395,7 +496,8 @@ const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
 module.exports = {
     CountAllPannes,
     CountPannesBetweenSEDate,
-    CountPannesToday,
+    CountAllPannesByZone,
+    CountPannesTodayByZone,
     CountPannesByMonth,
     CountTopPannes,
     CountTopActionsCorrectives,
