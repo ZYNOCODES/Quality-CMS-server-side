@@ -339,7 +339,7 @@ const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Technician,
                 as: 'technicianAssociation',
-                attributes: ['code', 'fullname', 'username']
+                attributes: ['code', 'fullname', 'phoneNumber']
             }
         ],
         group: ['technician', 'technicianAssociation.id'],

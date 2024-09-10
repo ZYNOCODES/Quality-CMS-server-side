@@ -33,6 +33,13 @@ const findPanneByTechnician = async (Technician) => {
         },
     })
 };
+const findPanneByAgent = async (Agent) => {
+    return await Panne.findOne({
+        where: {
+            agent: Agent
+        },
+    })
+};
 const findPanneByPanneType = async (type) => {
     return await Panne.findOne({
         where: {
@@ -56,6 +63,7 @@ module.exports = {
     findPanneByProduct,
     findPanneByCode,
     findPanneByTechnician,
+    findPanneByAgent,
     findPanneByPanneType,
     findPanneInProgressByTechnician
 }

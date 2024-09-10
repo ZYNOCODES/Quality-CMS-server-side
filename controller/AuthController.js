@@ -1,7 +1,6 @@
 const { Op } = require('sequelize');
 const validator = require('validator');
 const AccessAgent = require('../model/AccessAgentModel.js');
-const Technician = require('../model/TechnicianModel.js');
 const Manager = require('../model/ManagerModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
@@ -92,36 +91,21 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
                 zone: existingZone.id
             });
             break;
-        case process.env.TECHNICIAN_TYPE:
-            // Generate a unique code for the product
-            const codeT = await generateUniqueCode("T", 6, Technician);
-            if (!codeT) {
-                return next(new CustomError('Erreur lors de la création d\'un utilisateur, veuillez réessayer.', 400));
-            }
-            user = await Technician.create({
-                code: codeT,
-                fullname,
-                username,
-                password: hashedPassword,
-                phoneNumber,
-                zone: existingZone.id
-            });
-            break;
-        case process.env.MANAGER_TYPE:
-            // Generate a unique code for the product
-            const codeM = await generateUniqueCode("M", 6, Manager);
-            if (!codeM) {
-                return next(new CustomError('Erreur lors de la création d\'un utilisateur, veuillez réessayer.', 400));
-            }
-            user = await Manager.create({
-                code: codeM,
-                fullname,
-                username,
-                password: hashedPassword,
-                phoneNumber,
-                zone: existingZone.id
-            });
-            break;
+        // case process.env.MANAGER_TYPE:
+        //     // Generate a unique code for the product
+        //     const codeM = await generateUniqueCode("M", 6, Manager);
+        //     if (!codeM) {
+        //         return next(new CustomError('Erreur lors de la création d\'un utilisateur, veuillez réessayer.', 400));
+        //     }
+        //     user = await Manager.create({
+        //         code: codeM,
+        //         fullname,
+        //         username,
+        //         password: hashedPassword,
+        //         phoneNumber,
+        //         zone: existingZone.id
+        //     });
+        //     break;
         default:
             return next(new CustomError('Rôle invalide', 400));
     }
@@ -132,6 +116,8 @@ const SignUp = asyncErrorHandler(async (req, res, next) => {
     //return success message
     res.status(200).json({ message: 'Utilisateur créé avec succès' });
 });
+//create new technician
+
 //find user by username or phone
 const _findUser = async (identifier) => {
     let user = await AccessAgent.findOne({
@@ -146,21 +132,6 @@ const _findUser = async (identifier) => {
 
     if (user) {
         user.role = process.env.AGENT_TYPE; // Set role for AccessAgent
-        return user;
-    }
-
-    user = await Technician.findOne({
-        where: {
-            [Op.or]: [
-                { username: identifier },
-                { phoneNumber: identifier }
-            ]
-        },
-        raw: true
-    });
-
-    if (user) {
-        user.role = process.env.TECHNICIAN_TYPE; // Set role for Technician
         return user;
     }
 

@@ -2,23 +2,18 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
 const Zone = require('./ZoneModel');
 
-const Technician = sequelize.define('technician', {
+const Displayer = sequelize.define('displayer', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         allowNull: false,
         autoIncrement: true,
     },
-    code:{
+    username:{
         type: DataTypes.STRING,
         allowNull: false,
     },
-    fullname:{
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
-    },
-    phoneNumber:{
+    password:{
         type: DataTypes.STRING,
         allowNull: false,
     },
@@ -35,10 +30,10 @@ const Technician = sequelize.define('technician', {
     timestamps: false,
 });
 
-Technician.belongsTo(Zone, {
+Displayer.belongsTo(Zone, {
     foreignKey: 'zone',
     as: 'zoneAssociation'
 });
 
 
-module.exports = Technician;
+module.exports = Displayer;

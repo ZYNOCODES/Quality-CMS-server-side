@@ -1,11 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-    GetAllUsers,
     GetAllUserByCode,
-    GetAllTechnicianByZone,
-    UpdateUser,
-    DeleteUser
 } = require('../controller/UsersController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
@@ -18,17 +14,5 @@ router.use(requireAuth);
 //SHEARCH ROUTES
 //get specific technician by code
 router.get('/:code', LimiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE, process.env.TECHNICIAN_TYPE]), GetAllUserByCode);
-
-//MANAGER ROUTES
-//get all users agents and  tichnicians
-router.get('/', LimiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), GetAllUsers);
-//update user
-router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateUser);
-//delete user
-router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeleteUser);
-
-//AGENT ROUTES
-//get all technician by zone
-router.get('/technician/:code', LimiterForGet, checkAuthorization([process.env.AGENT_TYPE]), GetAllTechnicianByZone);
 
 module.exports = router;
