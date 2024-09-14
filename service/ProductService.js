@@ -1,4 +1,5 @@
 const Product = require('../model/ProductModel');
+const Lot = require('../model/LotModel');
 
 const findProductById = async (id) => {
     return await Product.findByPk(id);
@@ -26,10 +27,25 @@ const findProductByZone = async (zone) => {
         raw: true
     })
 };
-const findProductByModel = async (model) => {
+const findProductByModelAndLot = async (model, lot) => {
     return await Product.findOne({
         where: {
-            model
+            model,
+            lot
+        },
+        include: [
+            {
+                model: Lot,
+                as: 'lotAssociation',
+                attributes: ['code', 'name']
+            }
+        ],
+    })
+};
+const findProductByLot = async (lot) => {
+    return await Product.findOne({
+        where: {
+            lot
         },
         raw: true
     })
@@ -39,5 +55,6 @@ module.exports = {
     findProductByFamily,
     findProductByZone,
     findProductByCode,
-    findProductByModel
+    findProductByModelAndLot,
+    findProductByLot
 }

@@ -59,7 +59,7 @@ router.get('/nonedelivred/:code', limiterForGet, checkAuthorization([process.env
 //get all clotured pannes by zone
 router.get('/archive/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllCloturedPannesByAgent); 
 //delete panne
-router.delete('/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeletePanne);
+router.delete('/:code/:agent', limiter, checkAuthorization([process.env.AGENT_TYPE]), DeletePanne);
 //get all pannes by technician
 router.get('/technician/:code', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), getAllPannesByTechnician);
 //create a new panne

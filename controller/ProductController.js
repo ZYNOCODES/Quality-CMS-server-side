@@ -1,6 +1,7 @@
 const Product = require('../model/ProductModel.js');
 const Zone = require('../model/ZoneModel.js');
 const Family = require('../model/FamilyModel.js');
+const Lot = require('../model/LotModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const validator = require('validator');
@@ -9,6 +10,7 @@ const FamilyService = require('../service/FamilyService.js');
 const ZoneService = require('../service/ZoneService.js');
 const ProductService = require('../service/ProductService.js');
 const PanneService = require('../service/PanneService.js');
+const LotService = require('../service/LotService.js');
 
 //get all Products
 const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
@@ -39,6 +41,11 @@ const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
                     model: Zone,
                     as: 'zoneAssociation',
                     attributes: ['code', 'name']
+                },
+                {
+                    model: Lot,
+                    as: 'lotAssociation',
+                    attributes: ['code', 'name']
                 }
             ]
         });
@@ -56,6 +63,11 @@ const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
                 {
                     model: Zone,
                     as: 'zoneAssociation',
+                    attributes: ['code', 'name']
+                },
+                {
+                    model: Lot,
+                    as: 'lotAssociation',
                     attributes: ['code', 'name']
                 }
             ]
@@ -89,6 +101,11 @@ const GetProduct = asyncErrorHandler(async (req, res, next) => {
                 model: Zone,
                 as: 'zoneAssociation',
                 attributes: ['code', 'name']
+            },
+            {
+                model: Lot,
+                as: 'lotAssociation',
+                attributes: ['code', 'name']
             }
         ]
     });
@@ -102,28 +119,32 @@ const GetProduct = asyncErrorHandler(async (req, res, next) => {
 const CreateProduct = asyncErrorHandler(async (req, res, next) => {
     const { marque, model, lot, family, zone } = req.body;
     // Check if the required fields are provided
-    if ([marque, model, lot].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([marque, model, lot, family, zone].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
     // Check if the family exists
-    if(family && !validator.isEmpty(family.toString())){
-        const existingFamily = await FamilyService.findFamilyById(family);
-        if (!existingFamily) {
-            return next(new CustomError('Famille non trouvée', 404));
-        }
+    const existingFamily = await FamilyService.findFamilyByCode(family);
+    if (!existingFamily) {
+        return next(new CustomError('Famille non trouvée', 404));
     }
+
     // Check if the zone exists
-    if(zone && !validator.isEmpty(zone.toString())){
-        const existingZone = await ZoneService.findZoneById(zone);
-        if (!existingZone) {
-            return next(new CustomError('Zone non trouvée', 404));
-        }
+    const existingZone = await ZoneService.findZoneByCode(zone);
+    if (!existingZone) {
+        return next(new CustomError('Zone non trouvée', 404));
     }
+
+    // Check if the lot exists
+    const existingLot = await LotService.findLotByCode(lot);
+    if (!existingLot) {
+        return next(new CustomError('Lot non trouvée', 404));
+    }
+
     //check if the Product already exists
-    const existingProduct = await ProductService.findProductByModel(model);
+    const existingProduct = await ProductService.findProductByModelAndLot(model, existingLot.id);
     if (existingProduct) {
-        return next(new CustomError('Ce produit existe déjà', 400));
+        return next(new CustomError(`Ce modèle existe déjà dans le lot ${existingProduct.lotAssociation.name}`, 400));
     }
     // Generate a unique code for the product
     const code = await generateUniqueCode("P", 6, Product);
@@ -135,9 +156,9 @@ const CreateProduct = asyncErrorHandler(async (req, res, next) => {
         code,
         marque,
         model,
-        lot,
-        family: !validator.isEmpty(family.toString()) ? family : null,
-        zone: !validator.isEmpty(zone.toString()) ? zone : null
+        lot: existingLot.id,
+        family: existingFamily.id,
+        zone: existingZone.id
     });
     //check if the new Product was created successfully
     if (!newProduct) {
@@ -164,33 +185,49 @@ const UpdateProduct = asyncErrorHandler(async (req, res, next) => {
     }
     
     // Check if the Product already exists
-    const existingProductModel = await ProductService.findProductByModel(model);
-    if (existingProductModel && existingProductModel.id !== existingProduct.id) {
-        return next(new CustomError('Ce produit existe déjà', 400));
+    if(model){
+        const existingProductModel = await ProductService.findProductByModelAndLot(model, existingProduct.lot);
+        if (existingProductModel) {
+            return next(new CustomError(`Ce modèle existe déjà dans le lot ${existingProductModel.lotAssociation.name}`, 400));
+        }
+        existingProduct.model = model;
     }
 
     // Check if the family exists
     if(family){
-        const existingFamily = await FamilyService.findFamilyById(family);
+        const existingFamily = await FamilyService.findFamilyByCode(family);
         if (!existingFamily) {
             return next(new CustomError('Famille non trouvée', 404));
         }
+        existingProduct.family = existingFamily.id;
     }
 
     // Check if the zone exists
     if(zone){
-        const existingZone = await ZoneService.findZoneById(zone);
+        const existingZone = await ZoneService.findZoneByCode(zone);
         if (!existingZone) {
             return next(new CustomError('Zone non trouvée', 404));
         }
+        existingProduct.zone = existingZone.id;
     }
 
-    // Update the Product
+    // Check if the lot exists
+    if(lot){
+        const existingLot = await LotService.findLotByCode(lot);
+        if (!existingLot) {
+            return next(new CustomError('Lot non trouvée', 404));
+        }
+        // Check if the Product already exists
+        const existingProductModel = await ProductService.findProductByModelAndLot(existingProduct.model, existingLot.id);
+        if (existingProductModel) {
+            return next(new CustomError(`Ce modèle existe déjà dans le lot ${existingLot.name}`, 400));
+        }
+
+        existingProduct.lot = existingLot.id;
+    }
+    
     if(marque) existingProduct.marque = marque;
-    if(model) existingProduct.model = model;
-    if(lot) existingProduct.lot = lot;
-    if(family) existingProduct.family = family;
-    if(zone) existingProduct.zone = zone;
+
     //save the updated Product
     const updatedProduct = await existingProduct.save();
 

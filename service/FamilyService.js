@@ -10,7 +10,16 @@ const findFamilyByCode = async (code) => {
         },
     })
 };
+const findFamilyByName = async (name) => {
+    return await Family.findOne({
+        where: {
+            name
+        },
+        raw: true
+    })
+};
 module.exports = {
     findFamilyById,
-    findFamilyByCode
+    findFamilyByCode,
+    findFamilyByName
 }

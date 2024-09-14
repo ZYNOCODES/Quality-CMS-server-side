@@ -4,6 +4,7 @@ const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const validator = require('validator');
 const { generateUniqueCode } = require('../util/Codification.js');
 const ProductService = require('../service/ProductService.js');
+const FamilyService = require('../service/FamilyService.js');
 
 //get all families
 const GetAllFamilies = asyncErrorHandler(async (req, res, next) => {
@@ -30,12 +31,7 @@ const CreateFamily = asyncErrorHandler(async (req, res, next) => {
     }
 
     // Check if the family name already exists
-    const existingName = await Family.findOne({
-        where: {
-            name
-        },
-        raw: true
-    });
+    const existingName = await FamilyService.findFamilyByName(name);
     if (existingName) {
         return next(new CustomError('Le nom de la famille existe déjà', 400));
     }
@@ -64,6 +60,7 @@ const UpdateFamily = asyncErrorHandler(async (req, res, next) => {
     ) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
+
     //check if family exists
     const existFamily = await Family.findOne({
         where: {
@@ -73,13 +70,22 @@ const UpdateFamily = asyncErrorHandler(async (req, res, next) => {
     if (!existFamily) {
         return next(new CustomError('Famille non trouvée', 404));
     }
+
+    // Check if the family name already exists
+    const existingName = await FamilyService.findFamilyByName(name);
+    if (existingName) {
+        return next(new CustomError('Le nom de la famille existe déjà', 400));
+    }
+
     //update family
-    if(name) existFamily.name = name;
+    existFamily.name = name;
+    //save family
     const updatedFamily = await existFamily.save();
     //check if family is updated
     if (!updatedFamily) {
         return next(new CustomError('Un problème est survenu lors de la mettre à jour de la famille, veuillez réessayer.', 400));
     }
+    
     res.status(200).json({ message: 'Famille mise à jour avec succès' });
 });
 //delete family

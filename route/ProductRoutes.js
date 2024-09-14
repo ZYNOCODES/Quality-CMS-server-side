@@ -28,7 +28,7 @@ router.get('/one/:code', limiterForGet, checkAuthorization([process.env.MANAGER_
 //create a new workshop
 router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateProduct);
 //update workshop
-router.patch('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateProduct);
+router.patch('/update/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), UpdateProduct);
 //delete workshop
 router.delete('/:code', limiter, checkAuthorization([process.env.MANAGER_TYPE]), DeleteProduct);
 

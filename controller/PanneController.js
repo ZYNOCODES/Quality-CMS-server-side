@@ -19,6 +19,8 @@ const ConsommationService = require('../service/ConsommationService.js');
 const ActionCorrectiveService = require('../service/ActionCorrectiveService.js');
 const PanneTypeService = require('../service/PanneTypeService.js');
 const UserService = require('../service/UsersService.js');
+const LotService = require('../service/LotService.js');
+const utilMoment = require('../util/Moment.js');
 const moment = require('moment');
 require('moment-timezone');
 
@@ -512,19 +514,21 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     const transaction = await sequelize.transaction();
     try {
         // Validate existence of related entities
-        const [existingFamily , existingWorkshop , existingPanneType, existingAgent] = await Promise.all([
+        const [existingFamily , existingWorkshop , existingPanneType, existingAgent, existingLot] = await Promise.all([
             FamilyService.findFamilyByCode(family),
             WorkshopService.findWorkshopByCode(workshop),
             PanneTypeService.findPanneTypeByCode(panne),
             UserService.findAgentByCode(agent),
+            LotService.findLotByCode(lot),
         ]);
         if (!existingAgent) return next(new CustomError('Agent non trouvé', 404));
         if (!existingFamily) return next(new CustomError('Famille non trouvée', 404));
         if (!existingWorkshop) return next(new CustomError('Atelier non trouvé', 404));
         if (!existingPanneType) return next(new CustomError('Type de panne non trouvé', 404));
+        if (!existingLot) return next(new CustomError('Lot non trouvé', 404));
 
         // Check if the Product already exists
-        let product = await ProductService.findProductByModel(model);
+        let product = await ProductService.findProductByModelAndLot(model, existingLot.id);
 
         if (!product) {
             // Generate a unique code for the product
@@ -536,7 +540,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
                 code,
                 marque,
                 model,
-                lot,
+                lot: existingLot.id,
                 family: existingFamily.id,
                 zone: existingWorkshop.zone
             }, { transaction });
@@ -545,9 +549,9 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
         }
 
         // Get the current date and time
-        const dateDeclaration = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
+        const dateDeclaration = utilMoment.getCurrentDateTime();
 
-        // Generate a unique code for the product
+        // Generate a unique code for the panne
         const code = await generateUniqueCode("PN", 6, Panne);
         if (!code) return next(new CustomError('Un problème est survenu, veuillez réessayer.', 400));
 
@@ -622,7 +626,7 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
     }
 
     // Get the current date and time
-    const tempInitial = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
+    const tempInitial = utilMoment.getCurrentDateTime();
     
     //update the panne 
     existingPanne.technician = existingTechnician.id;
@@ -731,15 +735,6 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
     }
 
-    // //make sure that the panne is ready to be closed
-    // if([
-    //         existingPanne.product, 
-    //         existingPanne.technician,
-    //         existingPanne.dateDeclaration
-    //     ].some(field => !field || validator.isEmpty(field.toString()))){
-    //     return next(new CustomError('Tous les champs obligatoires doivent être remplis avant de clôturé la panne', 400));
-    // }
-
     //check if the panne is already have action corrective and consommation
     const existingConsommation = await ConsommationService.findConsommationByPanne(existingPanne.id);
     const existingActionCorrective = await ActionCorrectiveService.findActionCorrectiveByPanne(existingPanne.id);
@@ -753,13 +748,13 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
     }
     
     // Get the current date and time
-    const dateReparation = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
+    const dateReparation = utilMoment.getCurrentDateTime();
     //check if dateReparation is greater than existingPanne.tempInitial
-    if(moment(dateReparation, "YYYY-MM-DD HH:mm:ss").isBefore(moment(existingPanne.tempInitial, "YYYY-MM-DD HH:mm:ss"))){
+    if(moment.utc(dateReparation).isBefore(moment.utc(existingPanne.tempInitial))){
         return next(new CustomError('La date de réparation doit être supérieure à la date d\'intervention', 400));
     }
     // Calculate the difference in milliseconds
-    let dureeInMilliseconds = moment(dateReparation).diff(moment(existingPanne.tempInitial, "milliseconds"));
+    let dureeInMilliseconds = moment.utc(dateReparation).diff(moment.utc(existingPanne.tempInitial));
 
     //update the panne 
     existingPanne.dateReparation = dateReparation;
@@ -809,7 +804,7 @@ const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {
     }
 
     // Get the current date and time
-    const date = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
+    const date = utilMoment.getCurrentDateTime();
     
     //update the panne 
     existingPanne.livraison = true;
@@ -828,8 +823,7 @@ const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {
 });
 // delete panne
 const DeletePanne = asyncErrorHandler(async (req, res, next) => {
-    const { code } = req.params;
-    const { agent } = req.body;
+    const { code, agent } = req.params;
     // Validate required fields
     if ([code, agent].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
