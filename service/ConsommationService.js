@@ -1,4 +1,5 @@
 const Consommation = require('../model/ConsommationModel');
+const Piece = require('../model/PieceModel');
 
 const findConsommationById = async (id) => {
     return await Consommation.findByPk(id);
@@ -26,6 +27,20 @@ const findConsommationByPanne = async (panne) => {
         raw: true
     })
 };
+const findAllConsommationByPanne = async (panne) => {
+    return await Consommation.findAll({
+        where: {
+            panne
+        },
+        include: [
+            {
+                model: Piece,
+                as: 'pieceAssociation',
+                attributes: ['name'],
+            }
+        ]
+    })
+};
 const findConsommationByPanneAndPiece = async (panne, piece) => {
     return await Consommation.findOne({
         where: {
@@ -39,6 +54,7 @@ module.exports = {
     findConsommationById,
     findConsommationByPiece,
     findConsommationByPanne,
+    findAllConsommationByPanne,
     findConsommationByCode,
     findConsommationByPanneAndPiece
 }

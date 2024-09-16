@@ -352,7 +352,7 @@ const CountTopPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: PanneType,
                 as: 'typepanneAssociation',
-                attributes: ['name', 'duree'] 
+                attributes: ['name'] 
             }
         ],
         group: ['panne'],
@@ -381,7 +381,7 @@ const CountTopActionsCorrectives = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Action,
                 as: 'actionAssociation',
-                attributes: ['name'] 
+                attributes: ['name', 'duree'] 
             }
         ],
         group: ['action', 'actionAssociation.id'],

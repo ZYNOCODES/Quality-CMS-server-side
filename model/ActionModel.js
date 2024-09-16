@@ -15,7 +15,12 @@ const Action = sequelize.define('action', {
     name:{
         type: DataTypes.STRING,
         allowNull: false,
-    }
+    },
+    duree:{
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+    },
 },{
     freezeTableName: true,
     timestamps: false,

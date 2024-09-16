@@ -157,7 +157,19 @@ const UpdateWorkshop = asyncErrorHandler(async (req, res, next) => {
         existWorkshop.zone = existingZone.id;
     }
     //update Workshop
-    if(name) existWorkshop.name = name;
+    if(name) {
+        // Check if the Workshop name already exists
+        const existingName = await Workshop.findOne({
+            where: {
+                name,
+                zone: existWorkshop.zone
+            },
+        });
+        if (existingName) {
+            return next(new CustomError(`Le nom de ce atelier existe déjà dans sa zone`, 400));
+        }
+        existWorkshop.name = name;
+    }
     const updatedWorkshop = await existWorkshop.save();
     //check if Workshop is updated
     if (!updatedWorkshop) {

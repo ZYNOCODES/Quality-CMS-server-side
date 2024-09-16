@@ -5,6 +5,10 @@ const Panne = require('../model/PanneModel.js');
 const Product = require('../model/ProductModel.js');
 const Workshop = require('../model/WorkshopModel.js');
 const Technician = require('../model/TechnicianModel.js');
+const Agent = require('../model/AccessAgentModel.js');
+const Family = require('../model/FamilyModel');
+const Zone = require('../model/ZoneModel');
+const Lot = require('../model/LotModel');
 const CustomError = require('../util/CustomError.js');
 const PanneType = require('../model/PanneTypeModel.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
@@ -55,6 +59,11 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
                 model: PanneType,
                 as: 'typepanneAssociation',
                 attributes: ['code', 'name'],
+            },
+            {
+                model: Agent,
+                as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
             }
         ],
     })
@@ -98,6 +107,11 @@ const getAllArchivePannesByTechnician = asyncErrorHandler(async (req, res, next)
                 model: PanneType,
                 as: 'typepanneAssociation',
                 attributes: ['code', 'name'],
+            },
+            {
+                model: Agent,
+                as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
             }
         ],
     })
@@ -128,6 +142,11 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
                 model: PanneType,
                 as: 'typepanneAssociation',
                 attributes: ['code', 'name'],
+            },
+            {
+                model: Agent,
+                as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
             }
         ]
     })
@@ -161,6 +180,11 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
                 attributes: ['code', 'fullname']
             },
             {
+                model: Agent,
+                as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
+            },
+            {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name']
@@ -173,7 +197,7 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
             {
                 model: PanneType,
                 as: 'typepanneAssociation',
-                attributes: ['code', 'name', 'duree'],
+                attributes: ['code', 'name'],
             }
         ]
     })
@@ -313,6 +337,38 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
         },
         include: [
             {
+                model: Product,
+                as: 'productAssociation',
+                attributes: ['marque', 'model', 'lot', 'family', 'zone'],
+                include:[
+                    {
+                        model: Family,
+                        as: 'familyAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Zone,
+                        as: 'zoneAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Lot,
+                        as: 'lotAssociation',
+                        attributes: ['name']
+                    }
+                ]
+            },
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['fullname'],
+            },
+            {
+                model: Agent,
+                as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
+            },
+            {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
@@ -329,9 +385,22 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
     if (!pannes || pannes.length <= 0) {
         return next(new CustomError('Aucune panne trouvée', 404));
     }
+    // Fetch corrective actions and consumed pieces for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
+        const correctiveActions = await ActionCorrectiveService.findAllActionCorrectiveByPanne(panne.id); 
+        const correctiveActionNames = correctiveActions.map(ca => ca.actionAssociation.name);
 
-    // Respond with the pannes
-    res.status(200).json(pannes);
+        const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
+        const consommationNames = consommations.map(c => c.pieceAssociation.name);
+        return {
+            ...panne.toJSON(),
+            correctiveActionNames,
+            consommationNames
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
 });
 // get all non delivred pannes by Agent
 const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next) => {
@@ -358,6 +427,33 @@ const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next)
         },
         include: [
             {
+                model: Product,
+                as: 'productAssociation',
+                attributes: ['marque', 'model', 'lot', 'family', 'zone'],
+                include:[
+                    {
+                        model: Family,
+                        as: 'familyAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Zone,
+                        as: 'zoneAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Lot,
+                        as: 'lotAssociation',
+                        attributes: ['name']
+                    }
+                ]
+            },
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['fullname'],
+            },
+            {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
@@ -375,8 +471,22 @@ const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next)
         return next(new CustomError('Aucune panne trouvée', 404));
     }
 
-    // Respond with the pannes
-    res.status(200).json(pannes);
+    // Fetch corrective actions and consumed pieces for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
+        const correctiveActions = await ActionCorrectiveService.findAllActionCorrectiveByPanne(panne.id); 
+        const correctiveActionNames = correctiveActions.map(ca => ca.actionAssociation.name);
+
+        const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
+        const consommationNames = consommations.map(c => c.pieceAssociation.name);
+        return {
+            ...panne.toJSON(),
+            correctiveActionNames,
+            consommationNames
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
 });
 // get all non delivred pannes by zone
 const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
@@ -389,6 +499,33 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
         },
         include: [
             {
+                model: Product,
+                as: 'productAssociation',
+                attributes: ['marque', 'model', 'lot', 'family', 'zone'],
+                include:[
+                    {
+                        model: Family,
+                        as: 'familyAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Zone,
+                        as: 'zoneAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Lot,
+                        as: 'lotAssociation',
+                        attributes: ['name']
+                    }
+                ]
+            },
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['fullname'],
+            },
+            {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
@@ -406,8 +543,22 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Aucune panne trouvée', 404));
     }
 
-    // Respond with the pannes
-    res.status(200).json(pannes);
+    // Fetch corrective actions and consumed pieces for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
+        const correctiveActions = await ActionCorrectiveService.findAllActionCorrectiveByPanne(panne.id); 
+        const correctiveActionNames = correctiveActions.map(ca => ca.actionAssociation.name);
+
+        const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
+        const consommationNames = consommations.map(c => c.pieceAssociation.name);
+        return {
+            ...panne.toJSON(),
+            correctiveActionNames,
+            consommationNames
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
 });
 // get all clotured pannes by Agent
 const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => {
@@ -434,6 +585,33 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
         },
         include: [
             {
+                model: Product,
+                as: 'productAssociation',
+                attributes: ['marque', 'model', 'lot', 'family', 'zone'],
+                include:[
+                    {
+                        model: Family,
+                        as: 'familyAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Zone,
+                        as: 'zoneAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Lot,
+                        as: 'lotAssociation',
+                        attributes: ['name']
+                    }
+                ]
+            },
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['fullname'],
+            },
+            {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
@@ -451,8 +629,22 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
         return next(new CustomError('Aucune panne trouvée', 404));
     }
 
-    // Respond with the pannes
-    res.status(200).json(pannes);
+    // Fetch corrective actions and consumed pieces for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
+        const correctiveActions = await ActionCorrectiveService.findAllActionCorrectiveByPanne(panne.id); 
+        const correctiveActionNames = correctiveActions.map(ca => ca.actionAssociation.name);
+
+        const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
+        const consommationNames = consommations.map(c => c.pieceAssociation.name);
+        return {
+            ...panne.toJSON(),
+            correctiveActionNames,
+            consommationNames
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
 });
 // get pannes by product
 const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
@@ -489,6 +681,11 @@ const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
                 model: PanneType,
                 as: 'typepanneAssociation',
                 attributes: ['code', 'name'],
+            },
+            {
+                model: Agent,
+                as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
             }
         ]
     })
@@ -519,7 +716,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
             WorkshopService.findWorkshopByCode(workshop),
             PanneTypeService.findPanneTypeByCode(panne),
             UserService.findAgentByCode(agent),
-            LotService.findLotByCode(lot),
+            LotService.findLotByName(lot),
         ]);
         if (!existingAgent) return next(new CustomError('Agent non trouvé', 404));
         if (!existingFamily) return next(new CustomError('Famille non trouvée', 404));
@@ -646,13 +843,13 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
 // third panne step
 const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { source, etat, liberation, DateLiberation, agent } = req.body;
+    const { source, etat, agent } = req.body;
     // Validate required fields
     if ([code, agent].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
     // Validate required fields
-    if ([source, etat, DateLiberation].every(field => !field || validator.isEmpty(field.toString()))) {
+    if ([source, etat].every(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
     }
 
@@ -677,22 +874,11 @@ const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
     if(!existingPanne.technician && !existingPanne.tempInitial){
         return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
     }
-    
-    if (liberation == true && (!DateLiberation || validator.isEmpty(DateLiberation.toString()))) {
-        return next(new CustomError('Vous devez saisir une date de libération', 400));
-    }
 
     //update the panne 
     if (source) existingPanne.source = source;
     if (etat) existingPanne.etat = etat;
-    if (liberation == true && DateLiberation) {
-        existingPanne.liberation = true;
-        existingPanne.dateLibiration = DateLiberation;
-    }
-    if (liberation == false) {
-        existingPanne.liberation = false;
-        existingPanne.dateLibiration = null;
-    }
+    
     //save the updated panne
     const updatedPanne = await existingPanne.save();
 

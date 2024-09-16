@@ -4,12 +4,10 @@ const Displayer = require('../model/DisplayerModel.js');
 const Manager = require('../model/ManagerModel.js');
 const CustomError = require('../util/CustomError');
 const asyncErrorHandler = require('../util/asyncErrorHandler');
-const moment = require('moment');
-require('moment-timezone');
+const utilMoment = require('../util/Moment');
 
 const requireAuth = asyncErrorHandler(async (req, res, next) => {
     const {authorization} = req.headers;
-    
     if(!authorization || !authorization.startsWith('Bearer ')){
         // If User is not logged in, return error
         const err = new CustomError('authorization token is required', 401);
@@ -29,8 +27,7 @@ const requireAuth = asyncErrorHandler(async (req, res, next) => {
 
     const { id, type, exp } = decodedToken;
     // Check if the token has expired
-    const timezone = 'Africa/Algiers';
-    const currentTime = moment.tz(timezone);
+    const currentTime = utilMoment.getCurrentDateTime();
     if (currentTime.isSameOrAfter(exp * 1000)) {
         const err = new CustomError('Token has expired. Please log in again.', 401);
         return next(err);

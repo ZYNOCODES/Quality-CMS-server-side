@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
-const Action = require('../model/ActionModel.js');
+const Action = require('./ActionModel.js');
 
 const Actioncorrective = sequelize.define('actioncorrective', {
     id: {

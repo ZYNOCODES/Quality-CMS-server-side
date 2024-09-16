@@ -3,6 +3,7 @@ const sequelize = require('../config/Database');
 const Product = require('./ProductModel');
 const Workshop = require('./WorkshopModel');
 const Technician = require('./TechnicianModel');
+const Agent = require('./AccessAgentModel');
 const PanneType = require('./PanneTypeModel');
 
 const Panne = sequelize.define('panne', {
@@ -86,12 +87,12 @@ const Panne = sequelize.define('panne', {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    liberation: {
+    livraison:{
         type: DataTypes.BOOLEAN,
-        allowNull: false,
         defaultValue: false,
+        allowNull: false
     },
-    dateLibiration: {
+    DateLivraison:{
         type: DataTypes.DATE,
         allowNull: true,
     },
@@ -107,15 +108,6 @@ const Panne = sequelize.define('panne', {
         type: DataTypes.INTEGER,
         allowNull: true,
     },
-    livraison:{
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        allowNull: false
-    },
-    DateLivraison:{
-        type: DataTypes.DATE,
-        allowNull: true,
-    }
 }, {
     freezeTableName: true,
     timestamps: false,
@@ -125,6 +117,11 @@ const Panne = sequelize.define('panne', {
 Panne.belongsTo(Technician, {
     foreignKey: 'technician',
     as: 'technicianAssociation'
+});
+
+Panne.belongsTo(Agent, {
+    foreignKey: 'agent',
+    as: 'agentAssociation'
 });
 
 Panne.belongsTo(Workshop, {

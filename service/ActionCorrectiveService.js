@@ -1,4 +1,5 @@
 const ActionCorrective = require('../model/ActionCorrectiveModel');
+const Action = require('../model/ActionModel.js');
 
 const findActionCorrectiveById = async (id) => {
     return await ActionCorrective.findByPk(id);
@@ -26,6 +27,20 @@ const findActionCorrectiveByPanne = async (panne) => {
         raw: true
     })
 };
+const findAllActionCorrectiveByPanne = async (panne) => {
+    return await ActionCorrective.findAll({
+        where: {
+            panne
+        },
+        include: [
+            {
+                model: Action,
+                as: 'actionAssociation',
+                attributes: ['name'],
+            }
+        ]
+    })
+};
 const findActionCorrectiveByPanneAndAction = async (panne, action) => {
     return await ActionCorrective.findOne({
         where: {
@@ -39,6 +54,7 @@ module.exports = {
     findActionCorrectiveById,
     findActionCorrectiveByAction,
     findActionCorrectiveByPanne,
+    findAllActionCorrectiveByPanne,
     findActionCorrectiveByCode,
     findActionCorrectiveByPanneAndAction
 }

@@ -72,8 +72,17 @@ const UpdateZone = asyncErrorHandler(async (req, res, next) => {
     if (!existZone) {
         return next(new CustomError('Zone non trouvée', 404));
     }
+    //check if the name already exists
+    const existingName = await Zone.findOne({
+        where: {
+            name
+        },
+    });
+    if (existingName) {
+        return next(new CustomError('Le nom de cette zone existe déjà', 400));
+    }
     //update Zone
-    if(name) existZone.name = name;
+    existZone.name = name;
     const updatedZone = await existZone.save();
     //check if Zone is updated
     if (!updatedZone) {

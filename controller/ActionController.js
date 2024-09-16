@@ -16,11 +16,15 @@ const GetAllActions = asyncErrorHandler(async (req, res, next) => {
 });
 //create a new Action
 const CreateAction = asyncErrorHandler(async (req, res, next) => {
-    const { name } = req.body;
+    const { name, duree } = req.body;
 
     // Check if the name is provided
     if (!name || validator.isEmpty(name)) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    //check if duree is provided so check if it is a string
+    if (duree && !validator.isAlphanumeric(duree)) {
+        return next(new CustomError('La durée est invalide', 400));
     }
 
     // Generate a unique code for the Action
@@ -42,7 +46,8 @@ const CreateAction = asyncErrorHandler(async (req, res, next) => {
     // Create a new Action
     const newAction = await Action.create({
         code,
-        name
+        name,
+        duree: duree || null
     });
 
     // Check if the new Action was created successfully
@@ -56,11 +61,20 @@ const CreateAction = asyncErrorHandler(async (req, res, next) => {
 //update Action
 const UpdateAction = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { name } = req.body;
+    const { name, duree } = req.body;
+
     //check if name is provided
-    if (!name || validator.isEmpty(name)) {
-        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    if ((!name || validator.isEmpty(name))
+        && (!duree || validator.isEmpty(duree))
+    ) {
+        return next(new CustomError('Un des champs doivent être remplis', 400));
     }
+
+    //check if duree is provided so check if it is a string
+    if (duree && !validator.isAlphanumeric(duree)) {
+        return next(new CustomError('La durée doit être une chaîne de caractères', 400));
+    }
+
     //check if Action exists
     const existAction = await Action.findOne({
         where: {
@@ -70,17 +84,22 @@ const UpdateAction = asyncErrorHandler(async (req, res, next) => {
     if (!existAction) {
         return next(new CustomError('Action non trouvée', 404));
     }
-    //check if name already exists
-    const existingName = await Action.findOne({
-        where: {
-            name
-        },
-    });
-    if (existingName) {
-        return next(new CustomError('Le nom de cette action existe déjà', 400));
+
+    if(name){
+        //check if name already exists
+        const existingName = await Action.findOne({
+            where: {
+                name
+            },
+        });
+        if (existingName) {
+            return next(new CustomError('Le nom de cette action existe déjà', 400));
+        }
+        existAction.name = name;
     }
     //update Action
-    if(name) existAction.name = name;
+    if(duree) existAction.duree = duree;
+
     const updatedAction = await existAction.save();
     //check if Action is updated
     if (!updatedAction) {
