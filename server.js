@@ -25,6 +25,8 @@ const TechnicianRoutes = require('./route/TechnicianRoutes');
 const AgentRoutes = require('./route/AgentRoutes');
 const DisplayerRoutes = require('./route/DisplayerRoutes');
 const LotRoutes = require('./route/LotRoutes');
+const FileUploaderRoutes = require('./route/FileUploaderRoutes');
+
 
 //http server
 const http = require('http');
@@ -61,6 +63,7 @@ app.use('/api/technician', TechnicianRoutes);
 app.use('/api/agent', AgentRoutes);
 app.use('/api/displayer', DisplayerRoutes);
 app.use('/api/lot', LotRoutes);
+app.use('/api/xlsx', FileUploaderRoutes);
 
 //error handling
 app.use(ErrorHandler);

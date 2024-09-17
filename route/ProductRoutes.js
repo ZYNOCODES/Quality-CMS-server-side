@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     GetAllProducts,
+    GetAllProductsByZone,
     GetProduct,
     CreateProduct,
     UpdateProduct,
@@ -19,12 +20,16 @@ router.use(requireAuth);
 router.use(removeSpacesMiddleware);
 
 //SHARED ROUTES
-//get all workshops
-router.get('/:zone', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetAllProducts);
 //get specific product by code
 router.get('/one/:code', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE, process.env.AGENT_TYPE]), GetProduct);
 
+//AGENT ROUTES
+//get all products by zone
+router.get('/:zone', limiterForGet, checkAuthorization([process.env.AGENT_TYPE]), GetAllProductsByZone);
+
 //MANAGER ROUTES
+//get all products
+router.get('/', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), GetAllProducts);
 //create a new workshop
 router.post('/', limiter, checkAuthorization([process.env.MANAGER_TYPE]), CreateProduct);
 //update workshop

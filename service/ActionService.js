@@ -10,8 +10,16 @@ const findActionByCode = async (code) => {
         }
     });
 };
+const findActionByName = async (name) => {
+    return await Action.findOne({
+        where: {
+            name
+        }
+    });
+};
 
 module.exports = {
     findActionById,
-    findActionByCode
+    findActionByCode,
+    findActionByName
 }

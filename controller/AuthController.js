@@ -44,13 +44,20 @@ const SignIn = asyncErrorHandler(async (req, res, next) => {
     }
 
     //check if zone is exists
-    const zone = await ZoneService.findZoneById(user.zone);
-    if (!zone) {
-        return next(new CustomError('Zone invalide', 400));
+    if(!user.code.startsWith('M')){
+        const zone = await ZoneService.findZoneById(user.zone);
+        if (!zone) {
+            return next(new CustomError('Zone invalide', 400));
+        }
+        // Generate JWT token
+        const token = createToken(user.id, user.role, user.code, zone.code);
+
+        // Return token
+        return res.status(200).json({ token });
     }
 
     // Generate JWT token
-    const token = createToken(user.id, user.role, user.code, zone.code);
+    const token = createToken(user.id, user.role, user.code, null);
 
     // Return token
     res.status(200).json({ token });

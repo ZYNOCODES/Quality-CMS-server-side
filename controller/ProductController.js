@@ -14,6 +14,36 @@ const LotService = require('../service/LotService.js');
 
 //get all Products
 const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
+    //get all Products
+    const Products = await Product.findAll({
+            include: [
+                {
+                    model: Family,
+                    as: 'familyAssociation',
+                    attributes: ['code', 'name']
+                },
+                {
+                    model: Zone,
+                    as: 'zoneAssociation',
+                    attributes: ['code', 'name']
+                },
+                {
+                    model: Lot,
+                    as: 'lotAssociation',
+                    attributes: ['code', 'name']
+                }
+            ]
+    });
+
+    //check if there are Products
+    if (!Products || Products.length < 1) {
+        return next(new CustomError('Aucun produit trouvé', 404));
+    }
+    
+    res.status(200).json(Products);
+});
+//get all Products by zone
+const GetAllProductsByZone = asyncErrorHandler(async (req, res, next) => {
     const { zone } = req.params;
     //check if the zone is provided
     if ([zone].some(field => !field || validator.isEmpty(field))) {
@@ -27,51 +57,28 @@ const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
     }
 
     //get all Products
-    //check if req.user.code start with 'M' to get all Products
-    let Products = null;
-    if(req.user.code.startsWith('M'))
-        Products = await Product.findAll({
-            include: [
-                {
-                    model: Family,
-                    as: 'familyAssociation',
-                    attributes: ['code', 'name']
-                },
-                {
-                    model: Zone,
-                    as: 'zoneAssociation',
-                    attributes: ['code', 'name']
-                },
-                {
-                    model: Lot,
-                    as: 'lotAssociation',
-                    attributes: ['code', 'name']
-                }
-            ]
-        });
-    else
-        Products = await Product.findAll({
-            where: {
-                zone: existingZone.id
+    const Products = await Product.findAll({
+        where: {
+            zone: existingZone.id
+        },
+        include: [
+            {
+                model: Family,
+                as: 'familyAssociation',
+                attributes: ['code', 'name']
             },
-            include: [
-                {
-                    model: Family,
-                    as: 'familyAssociation',
-                    attributes: ['code', 'name']
-                },
-                {
-                    model: Zone,
-                    as: 'zoneAssociation',
-                    attributes: ['code', 'name']
-                },
-                {
-                    model: Lot,
-                    as: 'lotAssociation',
-                    attributes: ['code', 'name']
-                }
-            ]
-        });
+            {
+                model: Zone,
+                as: 'zoneAssociation',
+                attributes: ['code', 'name']
+            },
+            {
+                model: Lot,
+                as: 'lotAssociation',
+                attributes: ['code', 'name']
+            }
+        ]
+    });
     
     //check if there are Products
     if (!Products || Products.length < 1) {
@@ -272,6 +279,7 @@ const DeleteProduct = asyncErrorHandler(async (req, res, next) => {
 
 module.exports = {
     GetAllProducts,
+    GetAllProductsByZone,
     GetProduct,
     CreateProduct,
     UpdateProduct,

@@ -10,8 +10,16 @@ const findPieceByCode = async (code) => {
         }
     });
 };
+const findPieceByName = async (name) => {
+    return await Piece.findOne({
+        where: {
+            name
+        }
+    });
+}
 
 module.exports = {
     findPieceById,
-    findPieceByCode
+    findPieceByCode,
+    findPieceByName
 }

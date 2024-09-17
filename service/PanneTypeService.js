@@ -10,8 +10,16 @@ const findPanneTypeByCode = async (code) => {
         }
     });
 };
+const findPanneTypeByName = async (name) => {
+    return await PanneType.findOne({
+        where: {
+            name
+        }
+    });
+};
 
 module.exports = {
     findPanneTypeById,
-    findPanneTypeByCode
+    findPanneTypeByCode,
+    findPanneTypeByName
 }

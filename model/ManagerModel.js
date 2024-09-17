@@ -27,7 +27,8 @@ const manager = sequelize.define('manager', {
     },
     zone: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: null,
         references: {
             model: 'zone',
             key: 'id'

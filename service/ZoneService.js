@@ -11,7 +11,16 @@ const findZoneByCode = async (code) => {
         raw: true
     })
 };
+const findZoneByName = async (name) => {
+    return await Zone.findOne({
+        where: {
+            name
+        },
+        raw: true
+    })
+};
 module.exports = {
     findZoneById,
-    findZoneByCode
+    findZoneByCode,
+    findZoneByName
 }
