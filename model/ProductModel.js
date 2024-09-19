@@ -32,6 +32,10 @@ const Product = sequelize.define('product', {
             key: 'id'
         }
     },
+    tailleLot: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
     family: {
         type: DataTypes.INTEGER,
         allowNull: false,

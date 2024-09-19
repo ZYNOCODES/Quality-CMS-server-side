@@ -701,9 +701,9 @@ const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
 // first panne step
 const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { agent } = req.params;
-    const { marque, model, sn, lot, family, workshop, fournisseur, panne, ligne } = req.body;
+    const { marque, model, sn, lot, family, workshop, fournisseur, panne, ligne, tailleLot } = req.body;
     // Validate required fields
-    if ([ agent, marque, model, sn, lot, family, workshop, fournisseur, panne, ligne].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([ agent, marque, model, sn, lot, family, workshop, fournisseur, panne, ligne, tailleLot].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
@@ -724,6 +724,11 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
         if (!existingPanneType) return next(new CustomError('Type de panne non trouvé', 404));
         if (!existingLot) return next(new CustomError('Lot non trouvé', 404));
 
+        //check if the tailleLot is a number
+        if (!validator.isNumeric(tailleLot.toString()) || tailleLot < 0) {
+            return next(new CustomError('La taille du lot doit être un nombre positif', 400));
+        }
+
         // Check if the Product already exists
         let product = await ProductService.findProductByModelAndLot(model, existingLot.id);
 
@@ -739,7 +744,8 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
                 model,
                 lot: existingLot.id,
                 family: existingFamily.id,
-                zone: existingWorkshop.zone
+                zone: existingWorkshop.zone,
+                tailleLot
             }, { transaction });
 
             if (!product) return next(new CustomError('Un problème est survenu lors de la création d\'un produit, veuillez réessayer.', 400));

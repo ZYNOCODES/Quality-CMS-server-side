@@ -1,5 +1,6 @@
 const XLSX = require('xlsx');
 const fs = require('fs');
+const validator = require('validator');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const Product = require('../model/ProductModel');
@@ -41,11 +42,18 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
 
     for (let i = 0; i < Data.length; i++) {
         const item = Data[i];
-        if(!item.Modele || !item.Marque || !item.Lot || !item.Family || !item.Zone){
+        if(!item.Modele || !item.Marque || !item.Lot || !item.Family || !item.Zone || !item.TailleLot){
             const err = new CustomError('Format de fichier invalide', 400);
             fs.unlinkSync(excel.tempFilePath);
             return next(err);
         }
+
+        //check if the tailleLot is a number
+        if (!validator.isNumeric(item.TailleLot.toString()) || item.TailleLot < 0) {
+            errorData.push({item, msg: 'La taille du lot doit être un nombre positif'});
+            continue;
+        }
+
         // récupérer l'ID du lot à partir du nom du lot
         const existinglot = await LotService.findLotByName(item.Lot);
         if(!existinglot){
@@ -88,7 +96,8 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
             model: item.Modele,
             lot: existinglot.id,
             family: existingfamily.id,
-            zone: existingzone.id
+            zone: existingzone.id,
+            tailleLot: item.TailleLot
         });
         if(!newProduct){
             errorData.push({item, msg: 'Échec de la création du produit, veuillez réessayer.'});

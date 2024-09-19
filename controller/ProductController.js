@@ -124,10 +124,14 @@ const GetProduct = asyncErrorHandler(async (req, res, next) => {
 });
 //create a new Product
 const CreateProduct = asyncErrorHandler(async (req, res, next) => {
-    const { marque, model, lot, family, zone } = req.body;
+    const { marque, model, lot, family, zone, tailleLot } = req.body;
     // Check if the required fields are provided
-    if ([marque, model, lot, family, zone].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([marque, model, lot, family, zone, tailleLot].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    //check if the tailleLot is a number
+    if (!validator.isNumeric(tailleLot.toString()) || tailleLot < 0) {
+        return next(new CustomError('La taille du lot doit être un nombre positif', 400));
     }
 
     // Check if the family exists
@@ -165,7 +169,8 @@ const CreateProduct = asyncErrorHandler(async (req, res, next) => {
         model,
         lot: existingLot.id,
         family: existingFamily.id,
-        zone: existingZone.id
+        zone: existingZone.id,
+        tailleLot
     });
     //check if the new Product was created successfully
     if (!newProduct) {
@@ -177,9 +182,9 @@ const CreateProduct = asyncErrorHandler(async (req, res, next) => {
 //update a Product
 const UpdateProduct = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { marque, model, lot, family, zone } = req.body;
+    const { marque, model, lot, family, zone, tailleLot } = req.body;
     // Check if ONE OF the required fields are provided
-    if ([marque, model, lot, family, zone].every(
+    if ([marque, model, lot, family, zone, tailleLot].every(
         field => !field || validator.isEmpty(field.toString()))
     ) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
@@ -234,7 +239,13 @@ const UpdateProduct = asyncErrorHandler(async (req, res, next) => {
     }
     
     if(marque) existingProduct.marque = marque;
-
+    if(tailleLot){
+        //check if the tailleLot is a number
+        if (!validator.isNumeric(tailleLot.toString()) || tailleLot < 0) {
+            return next(new CustomError('La taille du lot doit être un nombre positif', 400));
+        }
+        existingProduct.tailleLot = tailleLot;
+    }
     //save the updated Product
     const updatedProduct = await existingProduct.save();
 
