@@ -192,7 +192,24 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['code', 'marque', 'model']
+                attributes: ['code', 'marque', 'model', 'sn', 'lot', 'tailleLot', 'family', 'zone'],
+                include: [
+                    {
+                        model: Family,
+                        as: 'familyAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Zone,
+                        as: 'zoneAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Lot,
+                        as: 'lotAssociation',
+                        attributes: ['name']
+                    }
+                ]
             },
             {
                 model: PanneType,
@@ -701,9 +718,9 @@ const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
 // first panne step
 const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { agent } = req.params;
-    const { marque, model, sn, lot, family, workshop, fournisseur, panne, ligne, tailleLot } = req.body;
+    const { marque, model, sn, lot, family, workshop, fournisseur, panne, ligne } = req.body;
     // Validate required fields
-    if ([ agent, marque, model, sn, lot, family, workshop, fournisseur, panne, ligne, tailleLot].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([ agent, marque, model, sn, lot, family, workshop, fournisseur, panne, ligne].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
 
@@ -724,11 +741,6 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
         if (!existingPanneType) return next(new CustomError('Type de panne non trouvé', 404));
         if (!existingLot) return next(new CustomError('Lot non trouvé', 404));
 
-        //check if the tailleLot is a number
-        if (!validator.isNumeric(tailleLot.toString()) || tailleLot < 0) {
-            return next(new CustomError('La taille du lot doit être un nombre positif', 400));
-        }
-
         // Check if the Product already exists
         let product = await ProductService.findProductByModelAndLot(model, existingLot.id);
 
@@ -745,7 +757,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
                 lot: existingLot.id,
                 family: existingFamily.id,
                 zone: existingWorkshop.zone,
-                tailleLot
+                sn
             }, { transaction });
 
             if (!product) return next(new CustomError('Un problème est survenu lors de la création d\'un produit, veuillez réessayer.', 400));
@@ -763,7 +775,6 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
             code,
             dateDeclaration,
             fournisseur,
-            sn,
             agent: existingAgent.id,
             panne: existingPanneType.id,
             ligne,
@@ -782,7 +793,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
         // Rollback the transaction in case of error
         await transaction.rollback();
         console.log(error)
-        return next('Error: Internal Server', 500);
+        return next(new CustomError('Error: Internal Server', 500));
     }
 });
 // second panne step
@@ -942,11 +953,11 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
     // Get the current date and time
     const dateReparation = utilMoment.getCurrentDateTime();
     //check if dateReparation is greater than existingPanne.tempInitial
-    if(moment.utc(dateReparation).isBefore(moment.utc(existingPanne.tempInitial))){
+    if(moment(dateReparation).isBefore(moment(existingPanne.tempInitial))){
         return next(new CustomError('La date de réparation doit être supérieure à la date d\'intervention', 400));
     }
     // Calculate the difference in milliseconds
-    let dureeInMilliseconds = moment.utc(dateReparation).diff(moment.utc(existingPanne.tempInitial));
+    let dureeInMilliseconds = moment(dateReparation).diff(moment(existingPanne.tempInitial));
 
     //update the panne 
     existingPanne.dateReparation = dateReparation;
@@ -991,9 +1002,20 @@ const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {
     }
 
     //check if this panne is clotured
-    if(!existingPanne.dateReparation || !existingPanne.dureeDintervention ){
-        return next(new CustomError('La panne n\'est pas encore cloturé par l\'agent', 400)); 
+    if(existingPanne.livraison){
+        return next(new CustomError('Vous ne pouvez pas cloturer une panne qui est déjà cloturé', 400));
     }
+
+    //check if this panne is clotured
+    if(!existingPanne.dateReparation || !existingPanne.dureeDintervention ){
+        return next(new CustomError('La panne n\'est pas encore soumis au panne non restitue par l\'agent', 400)); 
+    }
+
+    //check if its reopened panne
+    if(existingPanne.reouverture){
+        return next(new CustomError('Vous ne pouvez pas cloturer une panne qui est déjà réouvert', 400));
+    }
+
 
     // Get the current date and time
     const date = utilMoment.getCurrentDateTime();
@@ -1012,6 +1034,262 @@ const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {
 
     // Respond with success message
     res.status(200).json({ message: 'Panne mis à jour avec succès' });
+});
+// make panne delivred
+const MakeManyPannesDelivred = asyncErrorHandler(async (req, res, next) => {
+    const { agent, panneCODEs } = req.body;
+
+    // Validate required fields
+    if ([agent].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+    //check if the panneCODEs is not empty
+    if(panneCODEs.length <= 0){
+        return next(new CustomError('Vous devez sélectionner au moins une panne', 400));
+    }
+
+    // Check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
+    }
+
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+
+    try {
+        // Check if pannes exist
+        const existingPannes = await Panne.findAll({
+            where: {
+                code: panneCODEs,
+            },
+            transaction,
+        });
+
+        if (!existingPannes || existingPannes.length === 0) {
+            return next(new CustomError('Pannes non trouvée', 404));
+        }
+
+        const currentDate = utilMoment.getCurrentDateTime();
+
+        for (let panne of existingPannes) {
+            // Check if it's the same agent who created this panne
+            if (existingAgent.id !== panne.agent) {
+                await transaction.rollback();
+                return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
+            }
+
+            // Check if the panne is already delivered (cloturée)
+            if (panne.livraison) {
+                await transaction.rollback();
+                return next(new CustomError('Vous ne pouvez pas cloturer une panne qui est déjà cloturé', 400));
+            }
+
+            // Check if the panne has been repaired and duration is set
+            if (!panne.dateReparation || !panne.dureeDintervention) {
+                await transaction.rollback();
+                return next(new CustomError('La panne n\'est pas encore soumis au panne non restitue par l\'agent', 400));
+            }
+
+            // Check if the panne has been reopened
+            if (panne.reouverture) {
+                await transaction.rollback();
+                return next(new CustomError('Vous ne pouvez pas cloturer une panne qui est déjà réouvert', 400));
+            }
+
+            // Update panne as delivered
+            panne.livraison = true;
+            panne.DateLivraison = currentDate;
+        }
+
+        // Save all changes in bulk
+        await Promise.all(existingPannes.map(panne => panne.save({ transaction })));
+
+        // Commit the transaction
+        await transaction.commit();
+
+        // Respond with success message
+        res.status(200).json({ message: 'Pannes mises à jour avec succès' });
+
+    } catch (error) {
+        // Rollback the transaction in case of an error
+        await transaction.rollback();
+        return next(new CustomError('Une erreur est survenue lors de la mise à jour des pannes, veuillez réessayer.', 500));
+    }
+});
+const updatePanne = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+    const { agent, fournisseur, ligne, typepanne, workshop, marque, model, sn, lot, family } = req.body;
+    // Validate required fields
+    if ([ code, agent ].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Les champs obligatoire doivent être remplis', 400));
+    }
+    if ([ fournisseur, ligne, typepanne, workshop, marque, model, sn, lot, family].every(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Un des champs optionnel doivent être remplis', 400));
+    }
+    
+    //check if the agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvé', 404));
+    }
+
+    //check if the panne exists
+    const existingPanne = await PanneService.findPanneByCodeANDAgent(code, existingAgent.id);
+    if (!existingPanne) {
+        return next(new CustomError('Panne non trouvée', 404));
+    }
+
+    //check if the panne is already associated with a technician
+    if (existingPanne.technician) {
+        return next(new CustomError('Vous ne pouvez pas modifier une panne qui est déjà associée à un technicien', 400));
+    }
+
+    //get product by id
+    const existingProduct = await ProductService.findProductById(existingPanne.product);
+    if (!existingProduct) {
+        return next(new CustomError('Produit non trouvé', 404));
+    }
+
+
+    // update the panne
+    if (model) {
+        return next(new CustomError('Vous ne pouvez pas modifier le model du produit, dans ce cas veuillez supprimer la panne et créer une nouvelle', 400));
+    }
+    if (typepanne) {
+        //check if the typepanne exists
+        const existingTypePanne = await PanneTypeService.findPanneTypeByCode(typepanne);
+        if (!existingTypePanne) {
+            return next(new CustomError('Type de panne non trouvé', 404));
+        }
+        existingPanne.panne = existingTypePanne.id;
+    }
+    if (workshop) {
+        //check if the workshop exists
+        const existingWorkshop = await WorkshopService.findWorkshopByCode(workshop);
+        if (!existingWorkshop) {
+            return next(new CustomError('Atelier non trouvé', 404));
+        }
+        existingPanne.workshop = existingWorkshop.id;
+    }
+    if (lot) {
+        //check if the lot exists
+        const existingLot = await LotService.findLotByCode(lot);
+        if (!existingLot) {
+            return next(new CustomError('Lot non trouvé', 404));
+        }
+        existingProduct.lot = existingLot.id;
+    }
+    if (family) {
+        //check if the family exists
+        const existingFamily = await FamilyService.findFamilyByCode(family);
+        if (!existingFamily) {
+            return next(new CustomError('Famille non trouvée', 404));
+        }
+        existingProduct.family = existingFamily.id;
+
+    }
+    if (fournisseur) existingPanne.fournisseur = fournisseur;
+    if (ligne) existingPanne.ligne = ligne;
+    if (sn) existingProduct.sn = sn;
+    if (marque) existingProduct.marque = marque;
+
+    // save the updated panne
+    const updatedPanne = await existingPanne.save();
+    const updatedProduct = await existingProduct.save();
+    if (!updatedPanne || !updatedProduct) {
+        return next(new CustomError('Un problème est survenu lors de la mise à jour de la panne, veuillez réessayer.', 400));
+    }
+    
+    res.status(200).json({ message: 'Panne mis à jour avec succès' });
+});
+const ReOpenSpecificPanne = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+    const { agent} = req.body;
+    // Validate required fields
+    if ([ code, agent ].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Les champs obligatoire doivent être remplis', 400));
+    }
+    //check if the agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvé', 404));
+    }
+    //check if the panne exists
+    const existingPanne = await PanneService.findPanneByCodeANDAgent(code, existingAgent.id);
+    if (!existingPanne) {
+        return next(new CustomError('Panne non trouvée', 404));
+    }
+    //check if the panne is submitted to second scan
+    if(!existingPanne.technician && !existingPanne.tempFinale){
+        return next(new CustomError('La panne n\'a pas encore été soumise au dernière scan', 400));
+    }
+    //check if the panne is already delivred
+    if (existingPanne.livraison) {
+        return next(new CustomError('Vous ne pouvez pas réouvrir une panne qui est déjà restitue', 400));
+    }
+
+    // Get the current date and time
+    const currentDateTime = utilMoment.getCurrentDateTime();
+
+    // update the panne
+    existingPanne.reouverture = true;
+    existingPanne.reouvertureTempInitial = currentDateTime;
+    existingPanne.reouvertureTempFinal = null;
+
+    // save the updated panne
+    const updatedPanne = await existingPanne.save();
+    if (!updatedPanne) {
+        return next(new CustomError('Un problème est survenu lors de la mise à jour de la panne, veuillez réessayer.', 400));
+    }
+
+    res.status(200).json({ message: 'Panne réouvert avec succès' });
+});
+const ReCloseSpecificPanne = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+    const { agent} = req.body;
+    // Validate required fields
+    if ([ code, agent ].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Les champs obligatoire doivent être remplis', 400));
+    }
+    //check if the agent exists
+    const existingAgent = await UserService.findAgentByCode(agent);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvé', 404));
+    }
+    //check if the panne exists
+    const existingPanne = await PanneService.findPanneByCodeANDAgent(code, existingAgent.id);
+    if (!existingPanne) {
+        return next(new CustomError('Panne non trouvée', 404));
+    }
+    //check if the panne is reouvert
+    if(!existingPanne.reouvertureTempInitial){
+        return next(new CustomError('La panne n\'a pas encore été réouvert', 400));
+    }
+
+    // Get the current date and time
+    const currentDateTime = utilMoment.getCurrentDateTime();
+
+    //check if reouvertureTempFinal is greater than reouvertureTempInitial
+    if(moment(currentDateTime).isBefore(moment(existingPanne.reouvertureTempInitial))){
+        return next(new CustomError('La date de reouverture initial doit être supérieure à la date reouverture final', 400));
+    }
+    // Calculate the difference in milliseconds
+    const dureeInMilliseconds = currentDateTime.diff(moment(existingPanne.reouvertureTempInitial));
+
+    
+    // update the panne
+    existingPanne.reouvertureTempFinal = currentDateTime;
+    existingPanne.reouverture = false;
+    existingPanne.dureeDintervention = Number(existingPanne.dureeDintervention) + Number(dureeInMilliseconds);
+
+    // save the updated panne
+    const updatedPanne = await existingPanne.save();
+    if (!updatedPanne) {
+        return next(new CustomError('Un problème est survenu lors de la mise à jour de la panne, veuillez réessayer.', 400));
+    }
+
+    res.status(200).json({ message: 'Panne réouvert avec succès' });
 });
 // delete panne
 const DeletePanne = asyncErrorHandler(async (req, res, next) => {
@@ -1070,6 +1348,10 @@ module.exports = {
     thirdPanneStep,
     fourthPanneStep,
     MakePanneDelivred,
+    MakeManyPannesDelivred,
+    updatePanne,
     DeletePanne,
-    GetPannesByProduct
+    GetPannesByProduct,
+    ReOpenSpecificPanne,
+    ReCloseSpecificPanne
 }

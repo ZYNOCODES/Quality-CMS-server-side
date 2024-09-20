@@ -29,10 +29,6 @@ const Panne = sequelize.define('panne', {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    sn: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
     agent: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -107,6 +103,21 @@ const Panne = sequelize.define('panne', {
     dureeDintervention: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    reouverture: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+    },
+    reouvertureTempInitial: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null,
+    },
+    reouvertureTempFinal: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null,
     },
 }, {
     freezeTableName: true,

@@ -18,7 +18,11 @@ const {
     thirdPanneStep,
     fourthPanneStep,
     MakePanneDelivred,
+    MakeManyPannesDelivred,
     DeletePanne,
+    updatePanne,
+    ReOpenSpecificPanne,
+    ReCloseSpecificPanne
 } = require('../controller/PanneController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
@@ -72,5 +76,13 @@ router.patch('/third/:code', limiter, checkAuthorization([process.env.AGENT_TYPE
 router.patch('/fourth/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), fourthPanneStep);
 // make panne delivred
 router.patch('/delivred/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), MakePanneDelivred);
+// make many pannes delivred
+router.patch('/many/delivred', limiter, checkAuthorization([process.env.AGENT_TYPE]), MakeManyPannesDelivred);
+// update panne
+router.patch('/update/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), updatePanne);
+// reopen specific panne
+router.patch('/reopen/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), ReOpenSpecificPanne);
+// reclose specific panne
+router.patch('/reclose/:code', limiter, checkAuthorization([process.env.AGENT_TYPE]), ReCloseSpecificPanne);
 
 module.exports = router;

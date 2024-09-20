@@ -8,8 +8,8 @@ const PanneService = require('../service/PanneService.js');
 const ActionService = require('../service/ActionService.js');
 const UserService = require('../service/UsersService.js');
 const ActionCorrectiveService = require('../service/ActionCorrectiveService.js');
-const moment = require('moment');
-require('moment-timezone');
+const utilMoment = require('../util/Moment.js');
+
 
 //get all actions corrective by panne
 const GetAllActionsCorrectiveByPanne = asyncErrorHandler(async (req, res, next) => {
@@ -79,7 +79,7 @@ const CreateActionCorrective = asyncErrorHandler(async (req, res, next) => {
     }
 
     //check if the panne is already closed
-    if(existingPanne.dateReparation){
+    if(existingPanne.livraison){
         return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas ajouter une nouveau action corrective', 400));
     }
 
@@ -102,7 +102,7 @@ const CreateActionCorrective = asyncErrorHandler(async (req, res, next) => {
     }
 
     // get current date and time DZ
-    const date = moment().tz("Africa/Algiers").format('YYYY-MM-DD HH:mm:ss');
+    const date = utilMoment.getCurrentDateTime();
 
     // Create the new action corrective
     const newActionCorrective = await ActionCorrective.create({
@@ -204,7 +204,7 @@ const DeleteActionCorrective = asyncErrorHandler(async (req, res, next) => {
     }
 
     //check if the panne is already closed
-    if(existingPanne.dateReparation){
+    if(existingPanne.livraison){
         return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas supprimer l\'action corrective', 400));
     }
 

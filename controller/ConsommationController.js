@@ -73,7 +73,7 @@ const CreateConsommation = asyncErrorHandler(async (req, res, next) => {
     }
 
     //check if the panne is already closed
-    if(existingPanne.dateReparation){
+    if(existingPanne.livraison){
         return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas ajouter une nouveau consommation PDR', 400));
     }
 
@@ -191,7 +191,7 @@ const DeleteConsommation = asyncErrorHandler(async (req, res, next) => {
     }
 
     //check if the panne is already closed
-    if(existingPanne.dateReparation){
+    if(existingPanne.livraison){
         return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas supprimer l\'action corrective', 400));
     }
 

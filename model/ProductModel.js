@@ -24,6 +24,10 @@ const Product = sequelize.define('product', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    sn: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     lot: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -34,7 +38,8 @@ const Product = sequelize.define('product', {
     },
     tailleLot: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: 0,
     },
     family: {
         type: DataTypes.INTEGER,
