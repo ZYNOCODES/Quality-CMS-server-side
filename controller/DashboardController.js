@@ -7,6 +7,7 @@ const Action = require('../model/ActionModel.js');
 const Piece = require('../model/PieceModel.js');
 const PanneType = require('../model/PanneTypeModel.js');
 const Technician = require('../model/TechnicianModel.js');
+const PanneTypeAssignment = require('../model/PanneTypeAssignmentModel.js');
 const ZoneService = require('../service/ZoneService.js');
 const WorkshopService = require('../service/WorkshopService.js');
 const CustomError = require('../util/CustomError.js');
@@ -343,7 +344,7 @@ const CountPannesByMonth = asyncErrorHandler(async (req, res, next) => {
 // count top 4 pannes
 const CountTopPannes = asyncErrorHandler(async (req, res, next) => {
     // Count top 4 pannes by their "panne" field
-    const topPannes = await Panne.findAll({
+    const topPannes = await PanneTypeAssignment.findAll({
         attributes: [
             'panne',
             [sequelize.fn('COUNT', sequelize.col('panne')), 'count']

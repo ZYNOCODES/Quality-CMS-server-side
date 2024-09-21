@@ -26,6 +26,8 @@ const AgentRoutes = require('./route/AgentRoutes');
 const DisplayerRoutes = require('./route/DisplayerRoutes');
 const LotRoutes = require('./route/LotRoutes');
 const FileUploaderRoutes = require('./route/FileUploaderRoutes');
+const PanneTypeAssignmentRoutes = require('./route/PanneTypeAssignmentRoutes');
+const AgentUpdateActionsRoutes = require('./route/AgentUpdateActionsRoutes');
 
 
 //http server
@@ -64,6 +66,8 @@ app.use('/api/agent', AgentRoutes);
 app.use('/api/displayer', DisplayerRoutes);
 app.use('/api/lot', LotRoutes);
 app.use('/api/xlsx', FileUploaderRoutes);
+app.use('/api/pannetypeassignment', PanneTypeAssignmentRoutes);
+app.use('/api/agentupdateactions', AgentUpdateActionsRoutes);
 
 //error handling
 app.use(ErrorHandler);

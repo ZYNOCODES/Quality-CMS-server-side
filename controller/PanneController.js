@@ -9,6 +9,7 @@ const Agent = require('../model/AccessAgentModel.js');
 const Family = require('../model/FamilyModel');
 const Zone = require('../model/ZoneModel');
 const Lot = require('../model/LotModel');
+const PanneTypeAssignment = require('../model/PanneTypeAssignmentModel.js');
 const CustomError = require('../util/CustomError.js');
 const PanneType = require('../model/PanneTypeModel.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
@@ -23,6 +24,8 @@ const ConsommationService = require('../service/ConsommationService.js');
 const ActionCorrectiveService = require('../service/ActionCorrectiveService.js');
 const PanneTypeService = require('../service/PanneTypeService.js');
 const UserService = require('../service/UsersService.js');
+const PanneTypeAssignmentService = require('../service/PanneTypeAssignmentService.js');
+const AgentUpdateActionsService = require('../service/AgentUpdateActionsService.js');
 const LotService = require('../service/LotService.js');
 const utilMoment = require('../util/Moment.js');
 const moment = require('moment');
@@ -55,11 +58,7 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            },
+            
             {
                 model: Agent,
                 as: 'agentAssociation',
@@ -103,11 +102,7 @@ const getAllArchivePannesByTechnician = asyncErrorHandler(async (req, res, next)
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            },
+            
             {
                 model: Agent,
                 as: 'agentAssociation',
@@ -138,11 +133,7 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            },
+            
             {
                 model: Agent,
                 as: 'agentAssociation',
@@ -211,11 +202,7 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
                     }
                 ]
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            }
+            
         ]
     })
     if(!existingPanne){
@@ -253,11 +240,7 @@ const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            }
+            
         ]
     })
 
@@ -283,11 +266,7 @@ const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            }
+            
         ]
     });
 
@@ -327,11 +306,7 @@ const getAllTakenPannesByAgent = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            }
+            
         ]
     });
 
@@ -390,11 +365,7 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            }
+            
         ]
     });
 
@@ -409,10 +380,15 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
 
         const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
         const consommationNames = consommations.map(c => c.pieceAssociation.name);
+
+        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
+        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+
         return {
             ...panne.toJSON(),
             correctiveActionNames,
-            consommationNames
+            consommationNames,
+            typePannesNames
         };
     }));
 
@@ -475,11 +451,7 @@ const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next)
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            }
+            
         ]
     });
 
@@ -495,10 +467,15 @@ const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next)
 
         const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
         const consommationNames = consommations.map(c => c.pieceAssociation.name);
+
+        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
+        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+
         return {
             ...panne.toJSON(),
             correctiveActionNames,
-            consommationNames
+            consommationNames,
+            typePannesNames
         };
     }));
 
@@ -547,11 +524,7 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            }
+            
         ]
     });
 
@@ -567,10 +540,15 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
 
         const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
         const consommationNames = consommations.map(c => c.pieceAssociation.name);
+
+        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
+        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+
         return {
             ...panne.toJSON(),
             correctiveActionNames,
-            consommationNames
+            consommationNames,
+            typePannesNames
         };
     }));
 
@@ -633,11 +611,7 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            }
+            
         ]
     });
 
@@ -653,10 +627,15 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
 
         const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
         const consommationNames = consommations.map(c => c.pieceAssociation.name);
+
+        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
+        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+
         return {
             ...panne.toJSON(),
             correctiveActionNames,
-            consommationNames
+            consommationNames,
+            typePannesNames
         };
     }));
 
@@ -694,11 +673,7 @@ const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
                 as: 'technicianAssociation',
                 attributes: ['code', 'fullname'],
             },
-            {
-                model: PanneType,
-                as: 'typepanneAssociation',
-                attributes: ['code', 'name'],
-            },
+            
             {
                 model: Agent,
                 as: 'agentAssociation',
@@ -720,9 +695,15 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { agent } = req.params;
     const { marque, model, sn, lot, family, workshop, fournisseur, panne, ligne } = req.body;
     // Validate required fields
-    if ([ agent, marque, model, sn, lot, family, workshop, fournisseur, panne, ligne].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([ agent, marque, model, sn, lot, family, workshop, fournisseur, ligne].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
+    //check if panne is empty
+    if(!panne || panne.length <= 0){
+        return next(new CustomError('Veuillez sélectionner un type de panne', 400));
+    }
+    // Extract codes from panne array
+    const panneCodes = panne.map(p => p.code);
 
     // Start a transaction
     const transaction = await sequelize.transaction();
@@ -731,14 +712,14 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
         const [existingFamily , existingWorkshop , existingPanneType, existingAgent, existingLot] = await Promise.all([
             FamilyService.findFamilyByCode(family),
             WorkshopService.findWorkshopByCode(workshop),
-            PanneTypeService.findPanneTypeByCode(panne),
+            PanneTypeService.findAllPanneTypeByCode(panneCodes),
             UserService.findAgentByCode(agent),
             LotService.findLotByName(lot),
         ]);
         if (!existingAgent) return next(new CustomError('Agent non trouvé', 404));
         if (!existingFamily) return next(new CustomError('Famille non trouvée', 404));
         if (!existingWorkshop) return next(new CustomError('Atelier non trouvé', 404));
-        if (!existingPanneType) return next(new CustomError('Type de panne non trouvé', 404));
+        if (!existingPanneType || existingPanneType.length <= 0) return next(new CustomError('Type de panne non trouvé', 404));
         if (!existingLot) return next(new CustomError('Lot non trouvé', 404));
 
         // Check if the Product already exists
@@ -776,7 +757,6 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
             dateDeclaration,
             fournisseur,
             agent: existingAgent.id,
-            panne: existingPanneType.id,
             ligne,
             product: product.id,
             workshop: existingWorkshop.id
@@ -784,6 +764,27 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
 
         if (!newPanne) return next(new CustomError('Un problème est survenu lors de la création d\'une panne, veuillez réessayer.', 400));
 
+        //create new pannetypeassignment
+        for (let panne of existingPanneType) {
+            const codePTP = await generateUniqueCode("PTP", 6, PanneTypeAssignment);
+            if (!codePTP){ 
+                await transaction.rollback();
+                return next(new CustomError('Un problème est survenu, veuillez réessayer.', 400));
+            }
+
+            const newPanneTypeAssignment = await PanneTypeAssignment.create({
+                code: codePTP,
+                panne: newPanne.id,
+                typepanne: panne.id,
+                date: dateDeclaration
+            }, { transaction });
+
+            if (!newPanneTypeAssignment) {
+                await transaction.rollback();
+                return next(new CustomError('Un problème est survenu lors de la création d\'une panne, veuillez réessayer.', 400));
+            }
+        }
+        
         // Commit the transaction
         await transaction.commit();
 
@@ -1117,16 +1118,18 @@ const MakeManyPannesDelivred = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Une erreur est survenue lors de la mise à jour des pannes, veuillez réessayer.', 500));
     }
 });
+// update panne
 const updatePanne = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { agent, fournisseur, ligne, typepanne, workshop, marque, model, sn, lot, family } = req.body;
+    const { agent, fournisseur, ligne, workshop, marque, model, sn, lot, family } = req.body;
     // Validate required fields
     if ([ code, agent ].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Les champs obligatoire doivent être remplis', 400));
     }
-    if ([ fournisseur, ligne, typepanne, workshop, marque, model, sn, lot, family].every(field => !field || validator.isEmpty(field.toString()))) {
+    if ([ fournisseur, ligne, workshop, marque, model, sn, lot, family].every(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Un des champs optionnel doivent être remplis', 400));
     }
+
     
     //check if the agent exists
     const existingAgent = await UserService.findAgentByCode(agent);
@@ -1156,14 +1159,7 @@ const updatePanne = asyncErrorHandler(async (req, res, next) => {
     if (model) {
         return next(new CustomError('Vous ne pouvez pas modifier le model du produit, dans ce cas veuillez supprimer la panne et créer une nouvelle', 400));
     }
-    if (typepanne) {
-        //check if the typepanne exists
-        const existingTypePanne = await PanneTypeService.findPanneTypeByCode(typepanne);
-        if (!existingTypePanne) {
-            return next(new CustomError('Type de panne non trouvé', 404));
-        }
-        existingPanne.panne = existingTypePanne.id;
-    }
+
     if (workshop) {
         //check if the workshop exists
         const existingWorkshop = await WorkshopService.findWorkshopByCode(workshop);
@@ -1200,9 +1196,13 @@ const updatePanne = asyncErrorHandler(async (req, res, next) => {
     if (!updatedPanne || !updatedProduct) {
         return next(new CustomError('Un problème est survenu lors de la mise à jour de la panne, veuillez réessayer.', 400));
     }
-    
+    const currentDate = utilMoment.getCurrentDateTime();
+    //add this action to agent 
+    await AgentUpdateActionsService.createAgentUpdateActions(existingAgent.id, updatedPanne.id, currentDate, "Modification des informations de base de la panne");
+
     res.status(200).json({ message: 'Panne mis à jour avec succès' });
 });
+// re open Specific Panne
 const ReOpenSpecificPanne = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
     const { agent} = req.body;
@@ -1243,8 +1243,14 @@ const ReOpenSpecificPanne = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Un problème est survenu lors de la mise à jour de la panne, veuillez réessayer.', 400));
     }
 
+    const currentDate = utilMoment.getCurrentDateTime();
+    //add this action to agent 
+    await AgentUpdateActionsService.createAgentUpdateActions(existingAgent.id, updatedPanne.id, currentDate, "Réouverture de la panne");
+
+
     res.status(200).json({ message: 'Panne réouvert avec succès' });
 });
+//re close specific panne
 const ReCloseSpecificPanne = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
     const { agent} = req.body;
@@ -1322,12 +1328,24 @@ const DeletePanne = asyncErrorHandler(async (req, res, next) => {
     if(existingConsommation || existingActionCorrective){
         return next(new CustomError('Vous ne pouvez pas supprimer cette panne car elle est liée à un PDRConsome ou une action corrective existante.', 400));
     }
+    
+    //delete all pannetypeassignment
+    const deletedPanneTypeAssignment = await PanneTypeAssignment.destroy({
+        where: {
+            panne: existingPanne.id
+        }
+    });
+    //check if PanneTypeAssignment is deleted
+    if (!deletedPanneTypeAssignment) {
+        return next(new CustomError('Un problème est survenu lors de la suppression d\'une panne, veuillez réessayer.', 400));
+    }
     //deletec Panne
     const deletedPanne = await existingPanne.destroy();
     //check if Panne is deleted
     if (!deletedPanne) {
         return next(new CustomError('Un problème est survenu lors de la suppression d\'une panne, veuillez réessayer.', 400));
     }
+
     res.status(200).json({ message: 'Panne supprimée avec succès' });
 });
 

@@ -10,6 +10,14 @@ const findPanneTypeByCode = async (code) => {
         }
     });
 };
+const findAllPanneTypeByCode = async (ArrayCodes) => {
+    return await PanneType.findAll({
+        where: {
+            code: ArrayCodes
+        },
+        raw: true
+    });
+};
 const findPanneTypeByName = async (name) => {
     return await PanneType.findOne({
         where: {
@@ -21,5 +29,6 @@ const findPanneTypeByName = async (name) => {
 module.exports = {
     findPanneTypeById,
     findPanneTypeByCode,
-    findPanneTypeByName
+    findPanneTypeByName,
+    findAllPanneTypeByCode
 }
