@@ -346,8 +346,8 @@ const CountTopPannes = asyncErrorHandler(async (req, res, next) => {
     // Count top 4 pannes by their "panne" field
     const topPannes = await PanneTypeAssignment.findAll({
         attributes: [
-            'panne',
-            [sequelize.fn('COUNT', sequelize.col('panne')), 'count']
+            'typepanne',
+            [sequelize.fn('COUNT', sequelize.col('typepanne')), 'count']
         ],
         include: [
             {
@@ -356,8 +356,8 @@ const CountTopPannes = asyncErrorHandler(async (req, res, next) => {
                 attributes: ['name'] 
             }
         ],
-        group: ['panne'],
-        order: [[sequelize.fn('COUNT', sequelize.col('panne')), 'DESC']],
+        group: ['typepanne'],
+        order: [[sequelize.fn('COUNT', sequelize.col('typepanne')), 'DESC']],
         limit: 4
     });
 
