@@ -24,6 +24,10 @@ const Panne = sequelize.define('panne', {
             key: 'id'
         }
     },
+    sn: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     fournisseur: {
         type: DataTypes.STRING,
         allowNull: false,

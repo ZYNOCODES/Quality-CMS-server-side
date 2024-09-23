@@ -183,7 +183,7 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['code', 'marque', 'model', 'sn', 'lot', 'tailleLot', 'family', 'zone'],
+                attributes: ['code', 'marque', 'model', 'lot', 'tailleLot', 'family', 'zone'],
                 include: [
                     {
                         model: Family,
@@ -738,7 +738,6 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
                 lot: existingLot.id,
                 family: existingFamily.id,
                 zone: existingWorkshop.zone,
-                sn
             }, { transaction });
 
             if (!product) return next(new CustomError('Un problème est survenu lors de la création d\'un produit, veuillez réessayer.', 400));
@@ -755,6 +754,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
         const newPanne = await Panne.create({
             code,
             dateDeclaration,
+            sn,
             fournisseur,
             agent: existingAgent.id,
             ligne,
@@ -1187,7 +1187,7 @@ const updatePanne = asyncErrorHandler(async (req, res, next) => {
     }
     if (fournisseur) existingPanne.fournisseur = fournisseur;
     if (ligne) existingPanne.ligne = ligne;
-    if (sn) existingProduct.sn = sn;
+    if (sn) existingPanne.sn = sn;
     if (marque) existingProduct.marque = marque;
 
     // save the updated panne

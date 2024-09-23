@@ -124,9 +124,9 @@ const GetProduct = asyncErrorHandler(async (req, res, next) => {
 });
 //create a new Product
 const CreateProduct = asyncErrorHandler(async (req, res, next) => {
-    const { marque, model, lot, family, zone, tailleLot, sn } = req.body;
+    const { marque, model, lot, family, zone, tailleLot } = req.body;
     // Check if the required fields are provided
-    if ([marque, model, lot, family, zone, tailleLot, sn].some(field => !field || validator.isEmpty(field.toString()))) {
+    if ([marque, model, lot, family, zone, tailleLot].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
     //check if the tailleLot is a number
@@ -171,7 +171,6 @@ const CreateProduct = asyncErrorHandler(async (req, res, next) => {
         family: existingFamily.id,
         zone: existingZone.id,
         tailleLot,
-        sn
     });
     //check if the new Product was created successfully
     if (!newProduct) {
@@ -183,9 +182,9 @@ const CreateProduct = asyncErrorHandler(async (req, res, next) => {
 //update a Product
 const UpdateProduct = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { marque, model, lot, family, zone, tailleLot, sn } = req.body;
+    const { marque, model, lot, family, zone, tailleLot } = req.body;
     // Check if ONE OF the required fields are provided
-    if ([marque, model, lot, family, zone, tailleLot, sn].every(
+    if ([marque, model, lot, family, zone, tailleLot].every(
         field => !field || validator.isEmpty(field.toString()))
     ) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
@@ -240,7 +239,6 @@ const UpdateProduct = asyncErrorHandler(async (req, res, next) => {
     }
     
     if(marque) existingProduct.marque = marque;
-    if(sn) existingProduct.sn = sn;
     if(tailleLot){
         //check if the tailleLot is a number
         if (!validator.isNumeric(tailleLot.toString()) || tailleLot < 0) {

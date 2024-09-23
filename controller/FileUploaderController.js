@@ -39,10 +39,9 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
     const Data = XLSX.utils.sheet_to_json(workbook.Sheets[SheetName]);
 
     const errorData = [];
-
     for (let i = 0; i < Data.length; i++) {
         const item = Data[i];
-        if(!item.Modele || !item.Marque || !item.Lot || !item.Family || !item.Zone || !item.TailleLot || !item.SN){
+        if(!item.Modele || !item.Marque || !item.Lot || !item.Family || !item.Zone || item.TailleLot == undefined){
             const err = new CustomError('Format de fichier invalide', 400);
             fs.unlinkSync(excel.tempFilePath);
             return next(err);
@@ -98,7 +97,6 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
             family: existingfamily.id,
             zone: existingzone.id,
             tailleLot: item.TailleLot,
-            sn: item.SN
         });
         if(!newProduct){
             errorData.push({item, msg: 'Échec de la création du produit, veuillez réessayer.'});

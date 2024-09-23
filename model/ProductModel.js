@@ -24,10 +24,6 @@ const Product = sequelize.define('product', {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    sn: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
     lot: {
         type: DataTypes.STRING,
         allowNull: false,
