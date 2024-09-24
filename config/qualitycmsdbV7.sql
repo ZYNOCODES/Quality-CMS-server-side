@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 21, 2024 at 05:24 AM
+-- Generation Time: Sep 24, 2024 at 09:49 AM
 -- Server version: 10.4.25-MariaDB
 -- PHP Version: 8.1.10
 
@@ -99,6 +99,15 @@ CREATE TABLE `actioncorrective` (
   `code` varchar(55) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `actioncorrective`
+--
+
+INSERT INTO `actioncorrective` (`id`, `panne`, `action`, `date`, `mesure`, `resultat`, `code`) VALUES
+(75, 85, 57, '2024-09-23 15:14:47', 'adas', '', 'ACC240923151447528042'),
+(76, 86, 57, '2024-09-23 15:27:46', 'ASD', '', 'ACC240923152746507827'),
+(77, 87, 59, '2024-09-23 15:28:01', 'ASD', 'ASD', 'ACC240923152801520094');
+
 -- --------------------------------------------------------
 
 --
@@ -137,6 +146,16 @@ CREATE TABLE `agent_update_actions` (
   `date` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `agent_update_actions`
+--
+
+INSERT INTO `agent_update_actions` (`id`, `agent`, `panne`, `action`, `date`) VALUES
+(3, 12, 85, 'Modification des informations de base de la panne', '2024-09-23 15:11:36'),
+(4, 12, 85, 'Modification des informations de base de la panne', '2024-09-23 15:11:53'),
+(5, 12, 85, 'Réouverture de la panne', '2024-09-23 15:15:06'),
+(6, 12, 87, 'Modification des informations de base de la panne', '2024-09-23 15:27:25');
+
 -- --------------------------------------------------------
 
 --
@@ -150,6 +169,15 @@ CREATE TABLE `consommation` (
   `quantity` varchar(55) DEFAULT NULL,
   `code` varchar(55) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `consommation`
+--
+
+INSERT INTO `consommation` (`id`, `panne`, `piece`, `quantity`, `code`) VALUES
+(67, 85, 41, 'asd', 'CS240923151450595146'),
+(68, 86, 43, 'DS', 'CS240923152750867540'),
+(69, 87, 41, 'ASD', 'CS240923152805451845');
 
 -- --------------------------------------------------------
 
@@ -254,6 +282,7 @@ INSERT INTO `manager` (`id`, `username`, `password`, `phoneNumber`, `code`, `zon
 CREATE TABLE `panne` (
   `id` int(11) NOT NULL,
   `product` int(11) NOT NULL,
+  `sn` varchar(255) NOT NULL,
   `fournisseur` varchar(55) NOT NULL,
   `agent` int(11) NOT NULL,
   `technician` int(11) DEFAULT NULL,
@@ -275,6 +304,16 @@ CREATE TABLE `panne` (
   `reouvertureTempFinal` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `panne`
+--
+
+INSERT INTO `panne` (`id`, `product`, `sn`, `fournisseur`, `agent`, `technician`, `workshop`, `dateDeclaration`, `ligne`, `dateReparation`, `source`, `etat`, `liberation`, `tempInitial`, `tempFinal`, `dureeDintervention`, `code`, `livraison`, `DateLivraison`, `reouverture`, `reouvertureTempInitial`, `reouvertureTempFinal`) VALUES
+(85, 140, '10027', 'NTIC', 12, 26, 23, '2024-09-23 15:07:45', '1', '2024-09-23 15:14:54', NULL, NULL, 0, '2024-09-23 15:12:06', '2024-09-23 15:14:54', 181297, 'PN240923150745701786', 1, '2024-09-23 15:16:18', 0, '2024-09-23 15:15:06', '2024-09-23 15:15:18'),
+(86, 140, '10028', 'NTIC', 12, 28, 23, '2024-09-23 15:17:24', '2', '2024-09-23 15:27:53', NULL, NULL, 0, '2024-09-23 15:17:32', '2024-09-23 15:27:53', 621095, 'PN240923151724348411', 1, '2024-09-23 15:28:22', 0, NULL, NULL),
+(87, 143, '100266', 'NTIC', 12, 32, 23, '2024-09-23 15:27:10', '1', '2024-09-23 15:28:08', NULL, NULL, 0, '2024-09-23 15:27:36', '2024-09-23 15:28:08', 32845, 'PN240923152710409659', 1, '2024-09-23 15:28:32', 0, NULL, NULL),
+(89, 140, '10027', 'asdas', 12, NULL, 23, '2024-09-24 08:40:03', '1', NULL, NULL, NULL, 0, NULL, NULL, NULL, 'PN240924084003748760', 0, NULL, 0, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -288,6 +327,19 @@ CREATE TABLE `pannetypeassignment` (
   `typepanne` int(11) NOT NULL,
   `date` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `pannetypeassignment`
+--
+
+INSERT INTO `pannetypeassignment` (`id`, `code`, `panne`, `typepanne`, `date`) VALUES
+(30, 'PTP240923150745331952', 85, 91, '2024-09-23 15:07:45'),
+(31, 'PTP240923150745225301', 85, 93, '2024-09-23 15:07:45'),
+(32, 'PTP240923150745541902', 85, 99, '2024-09-23 15:07:45'),
+(33, 'PTP240923151724983814', 86, 98, '2024-09-23 15:17:24'),
+(34, 'PTP240923152710711064', 87, 87, '2024-09-23 15:27:10'),
+(35, 'PTP240923152710497208', 87, 100, '2024-09-23 15:27:10'),
+(37, 'PTP240924084003207688', 89, 96, '2024-09-24 08:40:03');
 
 -- --------------------------------------------------------
 
@@ -339,13 +391,21 @@ CREATE TABLE `product` (
   `id` int(11) NOT NULL,
   `marque` varchar(55) NOT NULL,
   `model` varchar(55) NOT NULL,
-  `sn` varchar(55) NOT NULL,
   `lot` int(11) NOT NULL,
   `tailleLot` int(55) NOT NULL,
   `family` int(55) DEFAULT NULL,
   `zone` int(11) DEFAULT NULL,
   `code` varchar(55) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `product`
+--
+
+INSERT INTO `product` (`id`, `marque`, `model`, `lot`, `tailleLot`, `family`, `zone`, `code`) VALUES
+(140, 'STREAM', 'S40D10', 19, 0, 14, 12, 'P240923150745661911'),
+(143, 'STREAM', 'S40D11', 19, 0, 14, 12, 'P240923152710699823'),
+(144, 'STREAM', 'asdas', 5, 0, 14, 12, 'P240924081734678562');
 
 -- --------------------------------------------------------
 
@@ -642,7 +702,7 @@ ALTER TABLE `action`
 -- AUTO_INCREMENT for table `actioncorrective`
 --
 ALTER TABLE `actioncorrective`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
 
 --
 -- AUTO_INCREMENT for table `agent`
@@ -654,13 +714,13 @@ ALTER TABLE `agent`
 -- AUTO_INCREMENT for table `agent_update_actions`
 --
 ALTER TABLE `agent_update_actions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `consommation`
 --
 ALTER TABLE `consommation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
 
 --
 -- AUTO_INCREMENT for table `displayer`
@@ -690,13 +750,13 @@ ALTER TABLE `manager`
 -- AUTO_INCREMENT for table `panne`
 --
 ALTER TABLE `panne`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT for table `pannetypeassignment`
 --
 ALTER TABLE `pannetypeassignment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `piece`
@@ -708,7 +768,7 @@ ALTER TABLE `piece`
 -- AUTO_INCREMENT for table `product`
 --
 ALTER TABLE `product`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=139;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=145;
 
 --
 -- AUTO_INCREMENT for table `technician`
