@@ -28,6 +28,7 @@ const LotRoutes = require('./route/LotRoutes');
 const FileUploaderRoutes = require('./route/FileUploaderRoutes');
 const PanneTypeAssignmentRoutes = require('./route/PanneTypeAssignmentRoutes');
 const AgentUpdateActionsRoutes = require('./route/AgentUpdateActionsRoutes');
+const ArrivalRoutes = require('./route/ArrivalRoutes');
 
 
 //http server
@@ -68,6 +69,7 @@ app.use('/api/lot', LotRoutes);
 app.use('/api/xlsx', FileUploaderRoutes);
 app.use('/api/pannetypeassignment', PanneTypeAssignmentRoutes);
 app.use('/api/agentupdateactions', AgentUpdateActionsRoutes);
+app.use('/api/arrival', ArrivalRoutes);
 
 //error handling
 app.use(ErrorHandler);

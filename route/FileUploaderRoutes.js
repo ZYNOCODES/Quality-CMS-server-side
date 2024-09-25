@@ -8,7 +8,8 @@ const {
     UploadWorkshopXLSXFile,
     UploadPanneTypeXLSXFile,
     UploadActionXLSXFile,
-    UploadPieceXLSXFile
+    UploadPieceXLSXFile,
+    UploadArrivalXLSXFile
 } = require('../controller/FileUploaderController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const fileUploader = require('express-fileupload');
@@ -43,5 +44,7 @@ router.post('/upload/pannetype', limiter, checkAuthorization([process.env.MANAGE
 router.post('/upload/action', limiter, checkAuthorization([process.env.MANAGER_TYPE]), fileUploader(UploadOPTs), UploadActionXLSXFile);
 //upload pieces xlsx file
 router.post('/upload/piece', limiter, checkAuthorization([process.env.MANAGER_TYPE]), fileUploader(UploadOPTs), UploadPieceXLSXFile);
+//upload arrivals xlsx file
+router.post('/upload/arrival', limiter, checkAuthorization([process.env.MANAGER_TYPE]), fileUploader(UploadOPTs), UploadArrivalXLSXFile);
 
 module.exports = router;

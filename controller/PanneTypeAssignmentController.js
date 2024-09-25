@@ -69,11 +69,6 @@ const CreatePanneTypeAssignment = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
-    //check if the panne is submitted to second scan
-    if(existingPanne.technician || existingPanne.tempInitial || existingPanne.livraison){
-        return next(new CustomError('La panne est déjà soumise pour le deuxième scan, vous ne pouvez pas ajouter un type de panne', 400));
-    }
-
 
     //check if type of panne exists
     const existingPanneType = await PanneTypeService.findPanneTypeByCode(typePanne);
@@ -184,11 +179,6 @@ const DeletePanneTypeAssignment = asyncErrorHandler(async (req, res, next) => {
     //check if its the same agent who create this panne
     if(existingAgent.id != existingPanne.agent){
         return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
-    }
-
-    //check if the panne is already closed
-    if(existingPanne.livraison || existingPanne.technician || existingPanne.tempInitial){
-        return next(new CustomError('La panne est déjà soumise pour le deuxième scan, vous ne pouvez pas supprimer un type de panne', 400));
     }
 
     //delete action corrective

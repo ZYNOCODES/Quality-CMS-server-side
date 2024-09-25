@@ -3,6 +3,7 @@ const sequelize = require('../config/Database');
 const Family = require('./FamilyModel');
 const Zone = require('./ZoneModel');
 const Lot = require('./LotModel');
+const Arrival = require('./ArrivalModel');
 
 const Product = sequelize.define('product', {
     id: {
@@ -25,7 +26,7 @@ const Product = sequelize.define('product', {
         allowNull: false,
     },
     lot: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: 'lot',
@@ -36,6 +37,15 @@ const Product = sequelize.define('product', {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: 0,
+    },
+    arrival: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+        references: {
+            model: 'arrival',
+            key: 'id'
+        }
     },
     family: {
         type: DataTypes.INTEGER,
@@ -72,6 +82,11 @@ Product.belongsTo(Zone, {
 Product.belongsTo(Lot, {
     foreignKey: 'lot',
     as: 'lotAssociation'
+});
+
+Product.belongsTo(Arrival, {
+    foreignKey: 'arrival',
+    as: 'arrivalAssociation'
 });
 
 module.exports = Product;

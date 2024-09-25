@@ -19,6 +19,8 @@ const Action = require('../model/ActionModel');
 const ActionService = require('../service/ActionService.js');
 const Piece = require('../model/PieceModel');
 const PieceService = require('../service/PieceService.js');
+const Arrival = require('../model/ArrivalModel.js');
+const ArrivalService = require('../service/ArrivalService.js');
 const { generateUniqueCode } = require('../util/Codification.js');
 
 const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
@@ -41,7 +43,8 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
     const errorData = [];
     for (let i = 0; i < Data.length; i++) {
         const item = Data[i];
-        if(!item.Modele || !item.Marque || !item.Lot || !item.Family || !item.Zone || item.TailleLot == undefined){
+        if(!item.Modele || !item.Marque || !item.Lot ||
+            !item.Family || !item.Zone || item.TailleLot == undefined){
             const err = new CustomError('Format de fichier invalide', 400);
             fs.unlinkSync(excel.tempFilePath);
             return next(err);
@@ -74,6 +77,16 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
             continue;
         }
 
+        let existingArrival = null;
+        if(item.Arrivage){
+            // récupérer l'ID de l'arrivage à partir du nom de l'arrivage
+            existingArrival = await ArrivalService.findArrivalByName(item.Arrivage);
+            if(!existingArrival){
+                errorData.push({item, msg: 'Nom d\'arrivage invalide'});
+                continue;
+            }
+        }
+
         // vérifier si le produit existe
         const product = await ProductService.findProductByModelAndLot(item.Modele, existinglot.id);
         if(product){
@@ -97,6 +110,7 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
             family: existingfamily.id,
             zone: existingzone.id,
             tailleLot: item.TailleLot,
+            arrival: existingArrival ? existingArrival.id : null
         });
         if(!newProduct){
             errorData.push({item, msg: 'Échec de la création du produit, veuillez réessayer.'});
@@ -549,6 +563,67 @@ const UploadPieceXLSXFile = asyncErrorHandler(async (req, res, next) => {
     });
 });
 
+const UploadArrivalXLSXFile = asyncErrorHandler(async (req, res, next) => {
+    const { excel } = req.files;
+    if (!excel) {
+        const err = new CustomError('Aucun fichier téléchargé', 400);
+        return next(err);
+    }
+
+    if(excel.mimetype !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        const err = new CustomError('Type de fichier invalide', 400);
+        fs.unlinkSync(excel.tempFilePath);
+        return next(err);
+    }
+
+    const workbook = XLSX.readFile(excel.tempFilePath);
+    const SheetName = workbook.SheetNames[0];
+    const Data = XLSX.utils.sheet_to_json(workbook.Sheets[SheetName]);
+
+    const errorData = [];
+
+    for (let i = 0; i < Data.length; i++) {
+        const item = Data[i];
+        if(!item.Nom){
+            const err = new CustomError('Format de fichier invalide', 400);
+            fs.unlinkSync(excel.tempFilePath);
+            return next(err);
+        }
+
+        // vérifier si la pièce existe
+        const existingArrivalName = await ArrivalService.findArrivalByName(item.Nom);
+        if(existingArrivalName){
+            errorData.push({item, msg: 'L\'arrivage existe déjà'});
+            continue;
+        }
+
+        // Générer un code unique pour la pièce
+        const code = await generateUniqueCode(`AR${i}`, 6, Arrival);
+        if (!code) {
+            errorData.push({item, msg: 'Échec de la génération du code arrivage, veuillez réessayer.'});
+            continue;
+        }
+
+        // sinon, créer une nouvelle pièce
+        const newArrival = await Arrival.create({
+            code: code,
+            name: item.Nom,
+        });
+        if(!newArrival){
+            errorData.push({item, msg: 'Échec de la création de l\'arrivage, veuillez réessayer.'});
+            continue;
+        }
+
+    }
+
+    fs.unlinkSync(excel.tempFilePath);
+    res.status(200).json({
+        success: errorData.length === 0 ? true : false,
+        message: errorData.length === 0 ? 'Arrivages téléchargées avec succès' : 'Certaines arrivages n\'ont pas pu être téléchargées',
+        errorData: errorData
+    });
+});
+
 
 module.exports = {
     UploadProductXLSXFile,
@@ -558,5 +633,6 @@ module.exports = {
     UploadWorkshopXLSXFile,
     UploadPanneTypeXLSXFile,
     UploadActionXLSXFile,
-    UploadPieceXLSXFile
+    UploadPieceXLSXFile,
+    UploadArrivalXLSXFile
 }

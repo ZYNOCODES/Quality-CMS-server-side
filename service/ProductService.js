@@ -50,11 +50,20 @@ const findProductByLot = async (lot) => {
         raw: true
     })
 };
+const findProductByArrival = async (arrival) => {
+    return await Product.findOne({
+        where: {
+            arrival
+        },
+        raw: true
+    })
+};
 module.exports = {
     findProductById,
     findProductByFamily,
     findProductByZone,
     findProductByCode,
     findProductByModelAndLot,
-    findProductByLot
+    findProductByLot,
+    findProductByArrival
 }

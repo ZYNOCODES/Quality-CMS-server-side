@@ -2,6 +2,7 @@ const Product = require('../model/ProductModel.js');
 const Zone = require('../model/ZoneModel.js');
 const Family = require('../model/FamilyModel.js');
 const Lot = require('../model/LotModel.js');
+const Arrival = require('../model/ArrivalModel.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const validator = require('validator');
@@ -11,6 +12,7 @@ const ZoneService = require('../service/ZoneService.js');
 const ProductService = require('../service/ProductService.js');
 const PanneService = require('../service/PanneService.js');
 const LotService = require('../service/LotService.js');
+const ArrivalService = require('../service/ArrivalService.js');
 
 //get all Products
 const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
@@ -30,6 +32,11 @@ const GetAllProducts = asyncErrorHandler(async (req, res, next) => {
                 {
                     model: Lot,
                     as: 'lotAssociation',
+                    attributes: ['code', 'name']
+                },
+                {
+                    model: Arrival,
+                    as: 'arrivalAssociation',
                     attributes: ['code', 'name']
                 }
             ]
@@ -76,6 +83,11 @@ const GetAllProductsByZone = asyncErrorHandler(async (req, res, next) => {
                 model: Lot,
                 as: 'lotAssociation',
                 attributes: ['code', 'name']
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
         ]
     });
@@ -113,6 +125,11 @@ const GetProduct = asyncErrorHandler(async (req, res, next) => {
                 model: Lot,
                 as: 'lotAssociation',
                 attributes: ['code', 'name']
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
         ]
     });
@@ -124,7 +141,7 @@ const GetProduct = asyncErrorHandler(async (req, res, next) => {
 });
 //create a new Product
 const CreateProduct = asyncErrorHandler(async (req, res, next) => {
-    const { marque, model, lot, family, zone, tailleLot } = req.body;
+    const { marque, model, lot, family, zone, tailleLot, arrival } = req.body;
     // Check if the required fields are provided
     if ([marque, model, lot, family, zone, tailleLot].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
@@ -157,6 +174,16 @@ const CreateProduct = asyncErrorHandler(async (req, res, next) => {
     if (existingProduct) {
         return next(new CustomError(`Ce modèle existe déjà dans le lot ${existingProduct.lotAssociation.name}`, 400));
     }
+
+    let existingArrival = null;
+    if(arrival){
+        //check if the arrival exists
+        existingArrival = await ArrivalService.findArrivalByCode(arrival);
+        if (!existingArrival) {
+            return next(new CustomError('Arrivage non trouvée', 404));
+        }
+    }
+
     // Generate a unique code for the product
     const code = await generateUniqueCode("P", 6, Product);
     if (!code) {
@@ -171,6 +198,7 @@ const CreateProduct = asyncErrorHandler(async (req, res, next) => {
         family: existingFamily.id,
         zone: existingZone.id,
         tailleLot,
+        arrival: existingArrival ? existingArrival.id : null
     });
     //check if the new Product was created successfully
     if (!newProduct) {
@@ -182,9 +210,9 @@ const CreateProduct = asyncErrorHandler(async (req, res, next) => {
 //update a Product
 const UpdateProduct = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { marque, model, lot, family, zone, tailleLot } = req.body;
+    const { marque, model, lot, family, zone, tailleLot, arrival } = req.body;
     // Check if ONE OF the required fields are provided
-    if ([marque, model, lot, family, zone, tailleLot].every(
+    if ([marque, model, lot, family, zone, tailleLot, arrival].every(
         field => !field || validator.isEmpty(field.toString()))
     ) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
@@ -236,6 +264,14 @@ const UpdateProduct = asyncErrorHandler(async (req, res, next) => {
         }
 
         existingProduct.lot = existingLot.id;
+    }
+    if(arrival){
+        //check if the arrival exists
+        const existingArrival = await ArrivalService.findArrivalByCode(arrival);
+        if (!existingArrival) {
+            return next(new CustomError('Arrivage non trouvée', 404));
+        }
+        existingProduct.arrival = existingArrival.id;
     }
     
     if(marque) existingProduct.marque = marque;
