@@ -30,6 +30,7 @@ const AgentUpdateActionsService = require('../service/AgentUpdateActionsService.
 const LotService = require('../service/LotService.js');
 const ArrivalService = require('../service/ArrivalService.js');
 const FournisseurService = require('../service/FournisseurService.js');
+const RepairtimeService = require('../service/RepairtimeService.js');
 const utilMoment = require('../util/Moment.js');
 const moment = require('moment');
 require('moment-timezone');
@@ -1067,16 +1068,26 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
     existingPanne.technician = existingTechnician.id;
     existingPanne.tempInitial = tempInitial;
 
-    //save the updated panne
-    const updatedPanne = await existingPanne.save();
+    // Start a transaction
+    const transaction = await sequelize.transaction();
 
-    //check if the panne was updated successfully
-    if (!updatedPanne) {
-        return next(new CustomError('Un problème est survenu lors de la mise à jour du panne, veuillez réessayer.', 400));
+    try{
+        // Save the updated panne within the transaction
+        await existingPanne.save({ transaction });
+
+        // Create a new Repairtime entry within the transaction
+        await RepairtimeService.createNewRepairtime(existingPanne.id, tempInitial, transaction);
+
+        // Commit the transaction if everything succeeds
+        await transaction.commit();
+
+        // Respond with success message
+        res.status(200).json({ message: 'Panne mise à jour avec succès' });
+    }catch (error) {
+        // Rollback the transaction in case of any error
+        await transaction.rollback();
+        return next(error);
     }
-
-    // Respond with success message
-    res.status(200).json({ message: 'Panne mis à jour avec succès' });
 });
 // third panne step
 const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
@@ -1103,14 +1114,20 @@ const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Panne non trouvée', 404));
     }
 
+    
     //check if its the same agent who create this panne
     if(existingAgent.id != existingPanne.agent){
         return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
-
+    
     //check if the panne is submitted to second scan
     if(!existingPanne.technician && !existingPanne.tempInitial){
         return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
+    }
+    
+    //check if the panne in mode pause
+    if(existingPanne.isPaused){
+        return next(new CustomError('Vous ne pouvez pas modifier une panne qui est en mode pause', 400));
     }
 
     //update the panne 
@@ -1159,11 +1176,21 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
     }
 
+    //check if the panne in mode pause
+    if(existingPanne.isPaused){
+        return next(new CustomError('Vous ne pouvez pas cloturer une panne qui est en mode pause', 400));
+    }
+
+    const existingPanneType = await PanneTypeAssignmentService.findPanneTypeAssignmentByPanne(existingPanne.id);
+    if(!existingPanneType){
+        return next(new CustomError('Vous devez sélectionner au moins un type de panne', 400));
+    }
+
     //check if the panne is already have action corrective and consommation
     const existingConsommation = await ConsommationService.findConsommationByPanne(existingPanne.id);
     const existingActionCorrective = await ActionCorrectiveService.findActionCorrectiveByPanne(existingPanne.id);
     if(!existingConsommation || !existingActionCorrective){
-        return next(new CustomError('Vous ne pouvez pas clôturer cette panne car elle n\'a pas de PDRConsome ou d\'action corrective.', 400));
+        return next(new CustomError('Vous devez ajouter au moins une action corrective et une consommation', 400));
     }
 
     //check if the panne is already closed
@@ -1185,16 +1212,25 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
     existingPanne.tempFinal = dateReparation;
     existingPanne.dureeDintervention = dureeInMilliseconds;
 
-    //save the updated panne
-    const updatedPanne = await existingPanne.save();
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+    try{
+        //save the updated panne
+        await existingPanne.save({ transaction });
 
-    //check if the panne was updated successfully
-    if (!updatedPanne) {
-        return next(new CustomError('Un problème est survenu lors de la mise à jour du panne, veuillez réessayer.', 400));
+        //end a Repairtime entry within the transaction
+        await RepairtimeService.endRepairtime(existingPanne.id, dateReparation, transaction);
+
+        // Commit the transaction if everything succeeds
+        await transaction.commit();
+
+        // Respond with success message
+        res.status(200).json({ message: 'La panne a ete clôturé avec succès' });
+    }catch (error) {
+        // Rollback the transaction in case of any error
+        await transaction.rollback();
+        return next(new CustomError('Error: Internal Server', 500));
     }
-
-    // Respond with success message
-    res.status(200).json({ message: 'La panne a ete clôturé avec succès' });
 });
 // make panne delivred
 const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {

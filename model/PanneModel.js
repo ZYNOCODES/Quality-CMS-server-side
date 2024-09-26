@@ -119,6 +119,11 @@ const Panne = sequelize.define('panne', {
         allowNull: true,
         defaultValue: null,
     },
+    isPaused: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+    },
 }, {
     freezeTableName: true,
     timestamps: false,

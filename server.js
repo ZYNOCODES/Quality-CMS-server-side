@@ -30,6 +30,7 @@ const PanneTypeAssignmentRoutes = require('./route/PanneTypeAssignmentRoutes');
 const AgentUpdateActionsRoutes = require('./route/AgentUpdateActionsRoutes');
 const ArrivalRoutes = require('./route/ArrivalRoutes');
 const FournisseurRoutes = require('./route/FournisseurRoutes');
+const RepairtimeRoutes = require('./route/RepairtimeRoutes');
 
 //http server
 const http = require('http');
@@ -71,6 +72,7 @@ app.use('/api/pannetypeassignment', PanneTypeAssignmentRoutes);
 app.use('/api/agentupdateactions', AgentUpdateActionsRoutes);
 app.use('/api/arrival', ArrivalRoutes);
 app.use('/api/fournisseur', FournisseurRoutes);
+app.use('/api/repairtime', RepairtimeRoutes);
 
 //error handling
 app.use(ErrorHandler);

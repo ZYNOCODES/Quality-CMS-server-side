@@ -71,7 +71,12 @@ const CreateConsommation = asyncErrorHandler(async (req, res, next) => {
     if(!existingPanne.technician && !existingPanne.tempInitial){
         return next(new CustomError('La panne n\'a pas encore été soumise au deuxième scan', 400));
     }
-
+    
+    //check if the panne in mode pause
+    if(existingPanne.isPaused){
+        return next(new CustomError('La panne est en mode pause, vous ne pouvez pas ajouter une consommation PDR', 400));
+    }
+    
     //check if the panne is already closed
     if(existingPanne.livraison){
         return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas ajouter une nouveau consommation PDR', 400));
@@ -190,9 +195,14 @@ const DeleteConsommation = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
+    //check if the panne in mode pause
+    if(existingPanne.isPaused){
+        return next(new CustomError('La panne est en mode pause, vous ne pouvez pas supprimer cette consommation PDR', 400));
+    }
+
     //check if the panne is already closed
     if(existingPanne.livraison){
-        return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas supprimer l\'action corrective', 400));
+        return next(new CustomError('La panne est déjà clôturée, vous ne pouvez pas supprimer cette consommation PDR', 400));
     }
 
     //delete consommation PDR

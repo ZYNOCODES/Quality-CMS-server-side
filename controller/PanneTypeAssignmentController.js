@@ -69,6 +69,10 @@ const CreatePanneTypeAssignment = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
     }
 
+    //check if the panne in mode pause
+    if(existingPanne.isPaused){
+        return next(new CustomError('Vous ne pouvez pas effectuer cette action, la panne est en mode pause', 400));
+    }
 
     //check if type of panne exists
     const existingPanneType = await PanneTypeService.findPanneTypeByCode(typePanne);
@@ -179,6 +183,11 @@ const DeletePanneTypeAssignment = asyncErrorHandler(async (req, res, next) => {
     //check if its the same agent who create this panne
     if(existingAgent.id != existingPanne.agent){
         return next(new CustomError('Vous n\'avez pas l\'autorisation pour effectuer cette action', 400));
+    }
+
+    //check if the panne in mode pause
+    if(existingPanne.isPaused){
+        return next(new CustomError('Vous ne pouvez pas effectuer cette action, la panne est en mode pause', 400));
     }
 
     //delete action corrective
