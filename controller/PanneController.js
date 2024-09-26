@@ -10,9 +10,9 @@ const Agent = require('../model/AccessAgentModel.js');
 const Family = require('../model/FamilyModel');
 const Zone = require('../model/ZoneModel');
 const Lot = require('../model/LotModel');
+const Fournisseur = require('../model/FournisseurModel.js');
 const PanneTypeAssignment = require('../model/PanneTypeAssignmentModel.js');
 const CustomError = require('../util/CustomError.js');
-const PanneType = require('../model/PanneTypeModel.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const { generateUniqueCode } = require('../util/Codification.js');
 const FamilyService = require('../service/FamilyService.js');
@@ -29,6 +29,7 @@ const PanneTypeAssignmentService = require('../service/PanneTypeAssignmentServic
 const AgentUpdateActionsService = require('../service/AgentUpdateActionsService.js');
 const LotService = require('../service/LotService.js');
 const ArrivalService = require('../service/ArrivalService.js');
+const FournisseurService = require('../service/FournisseurService.js');
 const utilMoment = require('../util/Moment.js');
 const moment = require('moment');
 require('moment-timezone');
@@ -60,10 +61,14 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            
             {
                 model: Agent,
                 as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
             }
         ],
@@ -104,10 +109,14 @@ const getAllArchivePannesByTechnician = asyncErrorHandler(async (req, res, next)
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            
             {
                 model: Agent,
                 as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
             }
         ],
@@ -162,10 +171,14 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
-            
             {
                 model: Agent,
                 as: 'agentAssociation',
+                attributes: ['code', 'fullname'],
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
             }
         ]
@@ -208,6 +221,11 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
                 model: Workshop,
                 as: 'workshopAssociation',
                 attributes: ['code', 'name']
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
             },
             {
                 model: Product,
@@ -301,6 +319,11 @@ const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
+            }
             
         ]
     })
@@ -348,6 +371,11 @@ const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
                 model: Technician,
                 as: 'technicianAssociation',
                 attributes: ['fullname'],
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
             }
             
         ]
@@ -423,6 +451,11 @@ const getAllTakenPannesByAgent = asyncErrorHandler(async (req, res, next) => {
                 model: Technician,
                 as: 'technicianAssociation',
                 attributes: ['fullname'],
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
             }
             
         ]
@@ -501,6 +534,11 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
+            }
             
         ]
     });
@@ -592,6 +630,11 @@ const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next)
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
+            }
             
         ]
     });
@@ -670,6 +713,11 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
+            }
             
         ]
     });
@@ -762,6 +810,11 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
                 as: 'workshopAssociation',
                 attributes: ['code', 'name'],
             },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
+            }
             
         ]
     });
@@ -829,6 +882,11 @@ const GetPannesByProduct = asyncErrorHandler(async (req, res, next) => {
                 model: Agent,
                 as: 'agentAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
             }
         ]
     })
@@ -860,18 +918,20 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
     const transaction = await sequelize.transaction();
     try {
         // Validate existence of related entities
-        const [existingFamily , existingWorkshop , existingPanneType, existingAgent, existingLot] = await Promise.all([
+        const [existingFamily , existingWorkshop , existingPanneType, existingAgent, existingLot, existingFournisseur] = await Promise.all([
             FamilyService.findFamilyByCode(family),
             WorkshopService.findWorkshopByCode(workshop),
             PanneTypeService.findAllPanneTypeByCode(panneCodes),
             UserService.findAgentByCode(agent),
             LotService.findLotByName(lot),
+            FournisseurService.findFournisseurByCode(fournisseur)
         ]);
         if (!existingAgent) return next(new CustomError('Agent non trouvé', 404));
         if (!existingFamily) return next(new CustomError('Famille non trouvée', 404));
         if (!existingWorkshop) return next(new CustomError('Atelier non trouvé', 404));
         if (!existingPanneType || existingPanneType.length <= 0) return next(new CustomError('Type de panne non trouvé', 404));
         if (!existingLot) return next(new CustomError('Lot non trouvé', 404));
+        if (!existingFournisseur) return next(new CustomError('Fournisseur non trouvé', 404));
         
         let existingArrival = null;
         if(arrival){
@@ -915,7 +975,7 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
             code,
             dateDeclaration,
             sn,
-            fournisseur,
+            fournisseur: existingFournisseur.id,
             agent: existingAgent.id,
             ligne,
             product: product.id,

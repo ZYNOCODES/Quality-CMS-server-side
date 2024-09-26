@@ -4,6 +4,7 @@ const Product = require('./ProductModel');
 const Workshop = require('./WorkshopModel');
 const Technician = require('./TechnicianModel');
 const Agent = require('./AccessAgentModel');
+const Fournisseur = require('./FournisseurModel');
 
 const Panne = sequelize.define('panne', {
     id: {
@@ -31,6 +32,10 @@ const Panne = sequelize.define('panne', {
     fournisseur: {
         type: DataTypes.STRING,
         allowNull: false,
+        references: {
+            model: 'fournisseur',
+            key: 'id'
+        }
     },
     agent: {
         type: DataTypes.INTEGER,
@@ -138,6 +143,11 @@ Panne.belongsTo(Workshop, {
 Panne.belongsTo(Product, {
     foreignKey: 'product',
     as: 'productAssociation'
+});
+
+Panne.belongsTo(Fournisseur, {
+    foreignKey: 'fournisseur',
+    as: 'fournisseurAssociation'
 });
 
 module.exports = Panne;

@@ -29,7 +29,7 @@ const FileUploaderRoutes = require('./route/FileUploaderRoutes');
 const PanneTypeAssignmentRoutes = require('./route/PanneTypeAssignmentRoutes');
 const AgentUpdateActionsRoutes = require('./route/AgentUpdateActionsRoutes');
 const ArrivalRoutes = require('./route/ArrivalRoutes');
-
+const FournisseurRoutes = require('./route/FournisseurRoutes');
 
 //http server
 const http = require('http');
@@ -70,6 +70,7 @@ app.use('/api/xlsx', FileUploaderRoutes);
 app.use('/api/pannetypeassignment', PanneTypeAssignmentRoutes);
 app.use('/api/agentupdateactions', AgentUpdateActionsRoutes);
 app.use('/api/arrival', ArrivalRoutes);
+app.use('/api/fournisseur', FournisseurRoutes);
 
 //error handling
 app.use(ErrorHandler);
