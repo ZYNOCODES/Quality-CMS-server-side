@@ -10,6 +10,7 @@ const Technician = require('../model/TechnicianModel.js');
 const PanneTypeAssignment = require('../model/PanneTypeAssignmentModel.js');
 const ZoneService = require('../service/ZoneService.js');
 const WorkshopService = require('../service/WorkshopService.js');
+const RepairtimeService = require('../service/RepairtimeService.js');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const validator = require('validator');
@@ -426,13 +427,13 @@ const CountTopConsommations = asyncErrorHandler(async (req, res, next) => {
     // Return the results
     res.status(200).json(topConsommations);
 });
+// count top 5 technicians
 const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
-    // Get total number of pannes and total repair time for each technician
+    // Fetch the total number of pannes and group by technician
     const techniciansData = await Panne.findAll({
         attributes: [
             'technician',
-            [sequelize.fn('COUNT', sequelize.col('panne.id')), 'panneCount'], // Total number of pannes
-            [sequelize.fn('SUM', sequelize.col('dureeDintervention')), 'totalRepairTime'] // Total repair time in milliseconds
+            [sequelize.fn('COUNT', sequelize.col('panne.id')), 'panneCount'], // Count of pannes for each technician
         ],
         where: {
             dateReparation: { [Op.ne]: null }
@@ -449,28 +450,40 @@ const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
         limit: 5
     });
 
-    // Check if technicians data is valid
+    // Check if we found technicians
     if (!techniciansData || techniciansData.length === 0) {
         return next(new CustomError('Aucun technicien trouvé.', 404));
     }
 
-    // Calculate average repair time and format it
-    const formattedTechnicians = techniciansData.map(technician => {
-        const totalRepairTime = technician.dataValues.totalRepairTime;
-        const panneCount = technician.dataValues.panneCount;
+    // Calculate the total and average repair time for each technician
+    const formattedTechnicians = await Promise.all(techniciansData.map(async technician => {
+        // Fetch all pannes for the technician
+        const technicianPannes = await Panne.findAll({
+            where: { 
+                technician: technician.technician,
+                dateReparation: { [Op.ne]: null }
+            }
+        });
 
-        // Calculate the average repair time in milliseconds
-        const averageRepairTime = totalRepairTime / panneCount;
+        // Calculate the total repair time for all pannes
+        let totalRepairTime = 0;
+        for (const panne of technicianPannes) {
+            const repairTimeForPanne = await RepairtimeService.getAllRepairetimesByPanne(panne.id);
+            totalRepairTime += repairTimeForPanne;
+        }
 
-        // Format the average repair time from milliseconds to a readable string
+        // Calculate the average repair time
+        const averageRepairTime = totalRepairTime / technician.dataValues.panneCount;
+
+        // Format the average repair time into a human-readable string
         const duration = moment.duration(averageRepairTime);
         const days = duration.days();
         const hours = duration.hours();
         const minutes = duration.minutes();
         const seconds = duration.seconds();
+
         // Build the formatted duration string
         let formattedDuration = '';
-
         if (days > 0) {
             formattedDuration += `${days} jour${days > 1 ? 's' : ''}, `;
         }
@@ -486,11 +499,11 @@ const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
 
         return {
             ...technician.dataValues,
-            averageRepairTime: formattedDuration || "0 secondes"
+            averageRepairTime: formattedDuration || '0 secondes'
         };
-    });
+    }));
 
-    // Return the results
+    // Return the result with formatted data
     res.status(200).json(formattedTechnicians);
 });
 

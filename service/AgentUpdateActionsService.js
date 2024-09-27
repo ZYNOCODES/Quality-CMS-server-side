@@ -10,12 +10,14 @@ const findAgentUpdateActionsByCode = async (code) => {
         },
     })
 };
-const createAgentUpdateActions = async (agent, panne, date, action) => {
+const createAgentUpdateActions = async (agent, panne, date, action, transaction) => {
     return await AgentUpdateActions.create({
         agent: agent,
         panne: panne,
         action: action,
         date: date,
+    }, {
+        transaction
     });
 };
 module.exports = {

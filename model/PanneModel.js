@@ -100,24 +100,10 @@ const Panne = sequelize.define('panne', {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    dureeDintervention: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-    },
     reouverture: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
         allowNull: false
-    },
-    reouvertureTempInitial: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: null,
-    },
-    reouvertureTempFinal: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: null,
     },
     isPaused: {
         type: DataTypes.BOOLEAN,

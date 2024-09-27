@@ -79,9 +79,19 @@ const getAllPannesByTechnician = asyncErrorHandler(async (req, res, next) => {
     if (!pannes || pannes.length <= 0) {
         return next(new CustomError('Aucune panne trouvée', 404));
     }
+    // Fetch total repair time for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
 
-    // Respond with the pannes
-    res.status(200).json(pannes);
+        const totalRepairTime = await RepairtimeService.getAllRepairetimesByPanne(panne.id);
+
+        return {
+            ...panne.toJSON(),
+            dureeDintervention: totalRepairTime
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
 });
 // get all archive pannes by technician
 const getAllArchivePannesByTechnician = asyncErrorHandler(async (req, res, next) => {
@@ -127,9 +137,19 @@ const getAllArchivePannesByTechnician = asyncErrorHandler(async (req, res, next)
     if (!pannes || pannes.length <= 0) {
         return next(new CustomError('Aucune panne trouvée', 404));
     }
+    // Fetch total repair time for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
 
-    // Respond with the pannes
-    res.status(200).json(pannes);
+        const totalRepairTime = await RepairtimeService.getAllRepairetimesByPanne(panne.id);
+
+        return {
+            ...panne.toJSON(),
+            dureeDintervention: totalRepairTime
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
 });
 // get all pannes
 const getAllPannes = asyncErrorHandler(async (req, res, next) => {
@@ -262,8 +282,16 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Panne non trouvée', 404));
     }
 
-    // Respond with the panne
-    res.status(200).json(existingPanne);
+    const totalRepairTime = await RepairtimeService.getAllRepairetimesByPanne(existingPanne.id);
+
+    // Construct the panne response with the total repair time
+    const panne = {
+        ...existingPanne.toJSON(),
+        dureeDintervention: totalRepairTime
+    };
+
+    // Respond with the panne and its details
+    res.status(200).json(panne);
 });
 // get all pannes by Agent
 const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
@@ -559,191 +587,15 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
         const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
         const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
 
-        return {
-            ...panne.toJSON(),
-            correctiveActionNames,
-            consommationNames,
-            typePannesNames
-        };
-    }));
-
-    // Respond with the pannes and their associated details
-    res.status(200).json(pannesWithDetails);
-});
-// get all non delivred pannes by Agent
-const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next) => {
-    const { code } = req.params;
-
-    // Validate required fields
-    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
-        return next(new CustomError('Tous les champs doivent être remplis', 400));
-    }
-
-    //check if the Agent exists
-    const existingAgent = await UserService.findAgentByCode(code);
-    if (!existingAgent) {
-        return next(new CustomError('Agent non trouvée', 404));
-    }
-
-    // Get all pannes by zone
-    const pannes = await Panne.findAll({
-        where: {
-            agent: existingAgent.id,
-            technician: { [Op.ne]: null },
-            dateReparation: { [Op.ne]: null },
-            livraison: false
-        },
-        include: [
-            {
-                model: Product,
-                as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
-                include: [
-                    {
-                        model: Family,
-                        as: 'familyAssociation',
-                        attributes: ['name']
-                    },
-                    {
-                        model: Zone,
-                        as: 'zoneAssociation',
-                        attributes: ['name']
-                    },
-                    {
-                        model: Lot,
-                        as: 'lotAssociation',
-                        attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
-                    }
-                ]
-            },
-            {
-                model: Technician,
-                as: 'technicianAssociation',
-                attributes: ['fullname'],
-            },
-            {
-                model: Workshop,
-                as: 'workshopAssociation',
-                attributes: ['code', 'name'],
-            },
-            {
-                model: Fournisseur,
-                as: 'fournisseurAssociation',
-                attributes: ['code', 'fullname'],
-            }
-            
-        ]
-    });
-
-    //check if the pannes were found
-    if (!pannes || pannes.length <= 0) {
-        return next(new CustomError('Aucune panne trouvée', 404));
-    }
-
-    // Fetch corrective actions and consumed pieces for each panne
-    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
-        const correctiveActions = await ActionCorrectiveService.findAllActionCorrectiveByPanne(panne.id); 
-        const correctiveActionNames = correctiveActions.map(ca => ca.actionAssociation.name);
-
-        const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
-        const consommationNames = consommations.map(c => c.pieceAssociation.name);
-
-        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
-        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+        
+        const totalRepairTime = await RepairtimeService.getAllRepairetimesByPanne(panne.id);
 
         return {
             ...panne.toJSON(),
             correctiveActionNames,
             consommationNames,
-            typePannesNames
-        };
-    }));
-
-    // Respond with the pannes and their associated details
-    res.status(200).json(pannesWithDetails);
-});
-// get all non delivred pannes by zone
-const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
-    // Get all pannes by zone
-    const pannes = await Panne.findAll({
-        where: {
-            technician: { [Op.ne]: null },
-            dateReparation: { [Op.ne]: null },
-            livraison: false
-        },
-        include: [
-            {
-                model: Product,
-                as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
-                include: [
-                    {
-                        model: Family,
-                        as: 'familyAssociation',
-                        attributes: ['name']
-                    },
-                    {
-                        model: Zone,
-                        as: 'zoneAssociation',
-                        attributes: ['name']
-                    },
-                    {
-                        model: Lot,
-                        as: 'lotAssociation',
-                        attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
-                    }
-                ]
-            },
-            {
-                model: Technician,
-                as: 'technicianAssociation',
-                attributes: ['fullname'],
-            },
-            {
-                model: Workshop,
-                as: 'workshopAssociation',
-                attributes: ['code', 'name'],
-            },
-            {
-                model: Fournisseur,
-                as: 'fournisseurAssociation',
-                attributes: ['code', 'fullname'],
-            }
-            
-        ]
-    });
-
-    //check if the pannes were found
-    if (!pannes || pannes.length <= 0) {
-        return next(new CustomError('Aucune panne trouvée', 404));
-    }
-
-    // Fetch corrective actions and consumed pieces for each panne
-    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
-        const correctiveActions = await ActionCorrectiveService.findAllActionCorrectiveByPanne(panne.id); 
-        const correctiveActionNames = correctiveActions.map(ca => ca.actionAssociation.name);
-
-        const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
-        const consommationNames = consommations.map(c => c.pieceAssociation.name);
-
-        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
-        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
-
-        return {
-            ...panne.toJSON(),
-            correctiveActionNames,
-            consommationNames,
-            typePannesNames
+            typePannesNames,
+            dureeDintervention: totalRepairTime
         };
     }));
 
@@ -836,11 +688,200 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
         const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
         const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
 
+        const totalRepairTime = await RepairtimeService.getAllRepairetimesByPanne(panne.id);
+
         return {
             ...panne.toJSON(),
             correctiveActionNames,
             consommationNames,
-            typePannesNames
+            typePannesNames,
+            dureeDintervention: totalRepairTime
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
+});
+// get all non delivred pannes by zone
+const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            technician: { [Op.ne]: null },
+            dateReparation: { [Op.ne]: null },
+            livraison: false
+        },
+        include: [
+            {
+                model: Product,
+                as: 'productAssociation',
+                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                include: [
+                    {
+                        model: Family,
+                        as: 'familyAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Zone,
+                        as: 'zoneAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Lot,
+                        as: 'lotAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Arrival,
+                        as: 'arrivalAssociation',
+                        attributes: ['code', 'name']
+                    }
+                ]
+            },
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['fullname'],
+            },
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
+            }
+            
+        ]
+    });
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Fetch corrective actions and consumed pieces for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
+        const correctiveActions = await ActionCorrectiveService.findAllActionCorrectiveByPanne(panne.id); 
+        const correctiveActionNames = correctiveActions.map(ca => ca.actionAssociation.name);
+
+        const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
+        const consommationNames = consommations.map(c => c.pieceAssociation.name);
+
+        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
+        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+
+        const totalRepairTime = await RepairtimeService.getAllRepairetimesByPanne(panne.id);
+
+        return {
+            ...panne.toJSON(),
+            correctiveActionNames,
+            consommationNames,
+            typePannesNames,
+            dureeDintervention: totalRepairTime
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
+});
+// get all non delivred pannes by Agent
+const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next) => {
+    const { code } = req.params;
+
+    // Validate required fields
+    if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
+        return next(new CustomError('Tous les champs doivent être remplis', 400));
+    }
+
+    //check if the Agent exists
+    const existingAgent = await UserService.findAgentByCode(code);
+    if (!existingAgent) {
+        return next(new CustomError('Agent non trouvée', 404));
+    }
+
+    // Get all pannes by zone
+    const pannes = await Panne.findAll({
+        where: {
+            agent: existingAgent.id,
+            technician: { [Op.ne]: null },
+            dateReparation: { [Op.ne]: null },
+            livraison: false
+        },
+        include: [
+            {
+                model: Product,
+                as: 'productAssociation',
+                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                include: [
+                    {
+                        model: Family,
+                        as: 'familyAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Zone,
+                        as: 'zoneAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Lot,
+                        as: 'lotAssociation',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Arrival,
+                        as: 'arrivalAssociation',
+                        attributes: ['code', 'name']
+                    }
+                ]
+            },
+            {
+                model: Technician,
+                as: 'technicianAssociation',
+                attributes: ['fullname'],
+            },
+            {
+                model: Workshop,
+                as: 'workshopAssociation',
+                attributes: ['code', 'name'],
+            },
+            {
+                model: Fournisseur,
+                as: 'fournisseurAssociation',
+                attributes: ['code', 'fullname'],
+            }
+            
+        ]
+    });
+
+    //check if the pannes were found
+    if (!pannes || pannes.length <= 0) {
+        return next(new CustomError('Aucune panne trouvée', 404));
+    }
+
+    // Fetch corrective actions and consumed pieces for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
+        const correctiveActions = await ActionCorrectiveService.findAllActionCorrectiveByPanne(panne.id); 
+        const correctiveActionNames = correctiveActions.map(ca => ca.actionAssociation.name);
+
+        const consommations = await ConsommationService.findAllConsommationByPanne(panne.id);
+        const consommationNames = consommations.map(c => c.pieceAssociation.name);
+
+        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
+        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+
+        const totalRepairTime = await RepairtimeService.getAllRepairetimesByPanne(panne.id);
+
+        return {
+            ...panne.toJSON(),
+            correctiveActionNames,
+            consommationNames,
+            typePannesNames,
+            dureeDintervention: totalRepairTime
         };
     }));
 
@@ -1086,7 +1127,7 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
     }catch (error) {
         // Rollback the transaction in case of any error
         await transaction.rollback();
-        return next(error);
+        return next(new CustomError('Error: Internal Server', 500));
     }
 });
 // third panne step
@@ -1204,13 +1245,10 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
     if(moment(dateReparation).isBefore(moment(existingPanne.tempInitial))){
         return next(new CustomError('La date de réparation doit être supérieure à la date d\'intervention', 400));
     }
-    // Calculate the difference in milliseconds
-    let dureeInMilliseconds = moment(dateReparation).diff(moment(existingPanne.tempInitial));
 
     //update the panne 
     existingPanne.dateReparation = dateReparation;
     existingPanne.tempFinal = dateReparation;
-    existingPanne.dureeDintervention = dureeInMilliseconds;
 
     // Start a transaction
     const transaction = await sequelize.transaction();
@@ -1264,7 +1302,7 @@ const MakePanneDelivred = asyncErrorHandler(async (req, res, next) => {
     }
 
     //check if this panne is clotured
-    if(!existingPanne.dateReparation || !existingPanne.dureeDintervention ){
+    if(!existingPanne.dateReparation){
         return next(new CustomError('La panne n\'est pas encore soumis au panne non restitue par l\'agent', 400)); 
     }
 
@@ -1343,7 +1381,7 @@ const MakeManyPannesDelivred = asyncErrorHandler(async (req, res, next) => {
             }
 
             // Check if the panne has been repaired and duration is set
-            if (!panne.dateReparation || !panne.dureeDintervention) {
+            if (!panne.dateReparation) {
                 await transaction.rollback();
                 return next(new CustomError('La panne n\'est pas encore soumis au panne non restitue par l\'agent', 400));
             }
@@ -1454,17 +1492,30 @@ const updatePanne = asyncErrorHandler(async (req, res, next) => {
     if (sn) existingPanne.sn = sn;
     if (marque) existingProduct.marque = marque;
 
-    // save the updated panne
-    const updatedPanne = await existingPanne.save();
-    const updatedProduct = await existingProduct.save();
-    if (!updatedPanne || !updatedProduct) {
+
+    const currentDate = utilMoment.getCurrentDateTime();
+    
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+
+    try{
+        // save the updated panne
+        await existingPanne.save( { transaction } );
+        await existingProduct.save( { transaction } );
+
+        //add this action to agent 
+        await AgentUpdateActionsService.createAgentUpdateActions(existingAgent.id, existingPanne.id, currentDate, "Modification des informations de base de la panne", transaction);
+
+        // Commit the transaction if everything succeeds
+        await transaction.commit();
+
+        //panne closed seccessfully
+        res.status(200).json({ message: 'Panne mis à jour avec succès' });
+    }catch (error) {
+        // Rollback the transaction in case of any error
+        await transaction.rollback();
         return next(new CustomError('Un problème est survenu lors de la mise à jour de la panne, veuillez réessayer.', 400));
     }
-    const currentDate = utilMoment.getCurrentDateTime();
-    //add this action to agent 
-    await AgentUpdateActionsService.createAgentUpdateActions(existingAgent.id, updatedPanne.id, currentDate, "Modification des informations de base de la panne");
-
-    res.status(200).json({ message: 'Panne mis à jour avec succès' });
 });
 // re open Specific Panne
 const ReOpenSpecificPanne = asyncErrorHandler(async (req, res, next) => {
@@ -1498,21 +1549,29 @@ const ReOpenSpecificPanne = asyncErrorHandler(async (req, res, next) => {
 
     // update the panne
     existingPanne.reouverture = true;
-    existingPanne.reouvertureTempInitial = currentDateTime;
-    existingPanne.reouvertureTempFinal = null;
 
-    // save the updated panne
-    const updatedPanne = await existingPanne.save();
-    if (!updatedPanne) {
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+
+    try{
+        // save the updated panne
+        await existingPanne.save({ transaction });
+
+        // Create a new Repairtime entry  
+        await RepairtimeService.createNewRepairtime(existingPanne.id, currentDateTime, transaction);
+
+        //add this action to agent 
+        await AgentUpdateActionsService.createAgentUpdateActions(existingAgent.id, existingPanne.id, currentDateTime, "Réouverture de la panne", transaction);
+
+        // Commit the transaction if everything succeeds
+        await transaction.commit();
+
+        res.status(200).json({ message: 'Panne réouvert avec succès' });
+    }catch (error) {
+        // Rollback the transaction in case of any error
+        await transaction.rollback();
         return next(new CustomError('Un problème est survenu lors de la mise à jour de la panne, veuillez réessayer.', 400));
     }
-
-    const currentDate = utilMoment.getCurrentDateTime();
-    //add this action to agent 
-    await AgentUpdateActionsService.createAgentUpdateActions(existingAgent.id, updatedPanne.id, currentDate, "Réouverture de la panne");
-
-
-    res.status(200).json({ message: 'Panne réouvert avec succès' });
 });
 //re close specific panne
 const ReCloseSpecificPanne = asyncErrorHandler(async (req, res, next) => {
@@ -1533,33 +1592,36 @@ const ReCloseSpecificPanne = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Panne non trouvée', 404));
     }
     //check if the panne is reouvert
-    if(!existingPanne.reouvertureTempInitial){
+    if(!existingPanne.reouverture){
         return next(new CustomError('La panne n\'a pas encore été réouvert', 400));
     }
 
     // Get the current date and time
     const currentDateTime = utilMoment.getCurrentDateTime();
-
-    //check if reouvertureTempFinal is greater than reouvertureTempInitial
-    if(moment(currentDateTime).isBefore(moment(existingPanne.reouvertureTempInitial))){
-        return next(new CustomError('La date de reouverture initial doit être supérieure à la date reouverture final', 400));
-    }
-    // Calculate the difference in milliseconds
-    const dureeInMilliseconds = currentDateTime.diff(moment(existingPanne.reouvertureTempInitial));
-
     
     // update the panne
-    existingPanne.reouvertureTempFinal = currentDateTime;
     existingPanne.reouverture = false;
-    existingPanne.dureeDintervention = Number(existingPanne.dureeDintervention) + Number(dureeInMilliseconds);
 
-    // save the updated panne
-    const updatedPanne = await existingPanne.save();
-    if (!updatedPanne) {
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+
+    try{
+        // save the updated panne
+        await existingPanne.save({ transaction });
+
+        //end a Repairtime entry 
+        await RepairtimeService.endRepairtime(existingPanne.id, currentDateTime, transaction);
+
+        // Commit the transaction if everything succeeds
+        await transaction.commit();
+
+        //panne closed seccessfully
+        res.status(200).json({ message: 'Panne est re-cloturé avec succès' });
+    }catch (error) {
+        // Rollback the transaction in case of any error
+        await transaction.rollback();
         return next(new CustomError('Un problème est survenu lors de la mise à jour de la panne, veuillez réessayer.', 400));
     }
-
-    res.status(200).json({ message: 'Panne réouvert avec succès' });
 });
 // delete panne
 const DeletePanne = asyncErrorHandler(async (req, res, next) => {
