@@ -67,7 +67,8 @@ const findPanneInProgressByTechnician = async (Technician) => {
     return await Panne.findOne({
         where: {
             technician: Technician,
-            dateReparation: null
+            dateReparation: null,
+            isPaused: false
         },
         raw: true
     })

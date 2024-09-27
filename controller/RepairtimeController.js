@@ -110,6 +110,12 @@ const ResumeRepairtime = asyncErrorHandler(async (req, res, next) => {
             return next(new CustomError('Panne non trouvée', 404));
         }
 
+        //check if technician have current panne in progress
+        const existingPanneInProgress = await PanneService.findPanneInProgressByTechnician(existingPanne.technician);
+        if(existingPanneInProgress){
+            return next(new CustomError('Vous avez déjà eu une panne en cours vous devez la terminer', 400));
+        }
+
         // get the current date and time
         const currentDateTime = UtilMoment.getCurrentDateTime();
 
