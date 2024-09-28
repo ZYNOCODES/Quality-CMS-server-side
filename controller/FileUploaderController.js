@@ -21,6 +21,8 @@ const Piece = require('../model/PieceModel');
 const PieceService = require('../service/PieceService.js');
 const Arrival = require('../model/ArrivalModel.js');
 const ArrivalService = require('../service/ArrivalService.js');
+const Fournisseur = require('../model/FournisseurModel.js');
+const FournisseurService = require('../service/FournisseurService.js');
 const { generateUniqueCode } = require('../util/Codification.js');
 
 const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
@@ -624,6 +626,68 @@ const UploadArrivalXLSXFile = asyncErrorHandler(async (req, res, next) => {
     });
 });
 
+const UploadFournisseurXLSXFile = asyncErrorHandler(async (req, res, next) => {
+    const { excel } = req.files;
+    if (!excel) {
+        const err = new CustomError('Aucun fichier téléchargé', 400);
+        return next(err);
+    }
+
+    if(excel.mimetype !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        const err = new CustomError('Type de fichier invalide', 400);
+        fs.unlinkSync(excel.tempFilePath);
+        return next(err);
+    }
+
+    const workbook = XLSX.readFile(excel.tempFilePath);
+    const SheetName = workbook.SheetNames[0];
+    const Data = XLSX.utils.sheet_to_json(workbook.Sheets[SheetName]);
+
+    const errorData = [];
+
+    for (let i = 0; i < Data.length; i++) {
+        const item = Data[i];
+        if(!item.Nom){
+            const err = new CustomError('Format de fichier invalide', 400);
+            fs.unlinkSync(excel.tempFilePath);
+            return next(err);
+        }
+
+        // vérifier si la pièce existe
+        const existingFournisseurName = await FournisseurService.findFournisseurByName(item.Nom);
+        if(existingFournisseurName){
+            errorData.push({item, msg: 'Fournisseur existe déjà'});
+            continue;
+        }
+
+        // Générer un code unique pour la pièce
+        const code = await generateUniqueCode(`F${i}`, 4, Fournisseur);
+        if (!code) {
+            errorData.push({item, msg: 'Échec de la génération du code fournisseur, veuillez réessayer.'});
+            continue;
+        }
+
+        // sinon, créer une nouvelle pièce
+        const newFournisseur = await Fournisseur.create({
+            code: code,
+            fullname: item.Nom,
+        });
+        if(!newFournisseur){
+            errorData.push({item, msg: 'Échec de la création d\'un fournisseur, veuillez réessayer.'});
+            continue;
+        }
+
+    }
+
+    fs.unlinkSync(excel.tempFilePath);
+    res.status(200).json({
+        success: errorData.length === 0 ? true : false,
+        message: errorData.length === 0 ? 'Les fournisseurs téléchargées avec succès' : 'Certaines fournisseurs n\'ont pas pu être téléchargées',
+        errorData: errorData
+    });
+});
+
+
 
 module.exports = {
     UploadProductXLSXFile,
@@ -634,5 +698,6 @@ module.exports = {
     UploadPanneTypeXLSXFile,
     UploadActionXLSXFile,
     UploadPieceXLSXFile,
-    UploadArrivalXLSXFile
+    UploadArrivalXLSXFile,
+    UploadFournisseurXLSXFile
 }
