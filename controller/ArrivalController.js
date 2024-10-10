@@ -4,7 +4,7 @@ const asyncErrorHandler = require('../util/asyncErrorHandler.js');
 const validator = require('validator');
 const { generateUniqueCode } = require('../util/Codification.js');
 const ArrivalService = require('../service/ArrivalService.js');
-const ProductService = require('../service/ProductService.js');
+const PanneService = require('../service/PanneService.js');
 
 // Function to get all Arrivals
 const GetAllArrivals = asyncErrorHandler(async (req, res, next) => {
@@ -103,10 +103,10 @@ const DeleteArrival = asyncErrorHandler(async (req, res, next) => {
     if (!existingArrival) {
         return next(new CustomError('Arrivage non trouvée', 404));
     }
-    //check if there is Products related to this Arrival
-    const product = await ProductService.findProductByArrival(existingArrival.id);
-    if(product){
-        return next(new CustomError('Veuillez libérer tous les produits liés à ce arrivage avant de pouvoir le supprimer.', 400));
+    //check if there is pannes related to this Arrival
+    const panne = await PanneService.findPanneByArrival(existingArrival.id);
+    if(panne){
+        return next(new CustomError('Veuillez libérer tous les pannes liés à ce arrivage avant de pouvoir le supprimer.', 400));
     }
     //deletec Arrival
     const deletedArrival = await existingArrival.destroy();

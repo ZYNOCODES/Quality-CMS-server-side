@@ -7,6 +7,7 @@ const sequelize = require('./config/Database');
 const ErrorHandler = require('./controller/ErrorController');
 //security
 const cors = require('cors');
+
 //routes
 const AuthRoutes = require('./route/AuthRoutes');
 const ActionRoutes = require('./route/ActionRoutes');

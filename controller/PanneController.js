@@ -163,7 +163,7 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone'],
                 include: [
                     {
                         model: Family,
@@ -179,11 +179,6 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -201,6 +196,11 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
                 model: Fournisseur,
                 as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
         ]
     })
@@ -210,8 +210,20 @@ const getAllPannes = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Aucune panne trouvée', 404));
     }
 
-    // Respond with the pannes
-    res.status(200).json(pannes);
+    // Fetch panne types for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
+
+        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
+        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+
+        return {
+            ...panne.toJSON(),
+            typePannesNames
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
 });
 // get specific panne
 const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
@@ -249,9 +261,14 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
                 attributes: ['code', 'fullname'],
             },
             {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
+            },
+            {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['code', 'marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                attributes: ['code', 'marque', 'model', 'lot', 'tailleLot', 'family', 'zone'],
                 include: [
                     {
                         model: Family,
@@ -267,11 +284,6 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -296,7 +308,7 @@ const getSpecificPanne = asyncErrorHandler(async (req, res, next) => {
 // get all pannes by Agent
 const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-
+    
     // Validate required fields
     if ([code].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
@@ -319,7 +331,7 @@ const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone'],
                 include: [
                     {
                         model: Family,
@@ -335,11 +347,6 @@ const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -352,6 +359,11 @@ const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
                 model: Fournisseur,
                 as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
             
         ]
@@ -362,8 +374,20 @@ const getAllPannesByAgent = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Aucune panne trouvée', 404));
     }
 
-    // Respond with the pannes
-    res.status(200).json(pannes);
+    // Fetch panne types for each panne
+    const pannesWithDetails = await Promise.all(pannes.map(async (panne) => {
+
+        const typePannes = await PanneTypeAssignmentService.findAllPanneTypeAssignmentByPanne(panne.id);
+        const typePannesNames = typePannes.map(c => c.typepanneAssociation.name);
+
+        return {
+            ...panne.toJSON(),
+            typePannesNames
+        };
+    }));
+
+    // Respond with the pannes and their associated details
+    res.status(200).json(pannesWithDetails);
 });
 // get all taken pannes 
 const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
@@ -377,17 +401,12 @@ const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['lot', 'arrival', 'model'],
+                attributes: ['lot', 'model'],
                 include: [
                     {
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -405,6 +424,11 @@ const getAllTakenPannes = asyncErrorHandler(async (req, res, next) => {
                 model: Fournisseur,
                 as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
             
         ]
@@ -457,17 +481,12 @@ const getAllTakenPannesByAgent = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['lot', 'arrival', 'model'],
+                attributes: ['lot', 'model'],
                 include: [
                     {
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -485,6 +504,11 @@ const getAllTakenPannesByAgent = asyncErrorHandler(async (req, res, next) => {
                 model: Fournisseur,
                 as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
             
         ]
@@ -524,7 +548,7 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone'],
                 include: [
                     {
                         model: Family,
@@ -540,11 +564,6 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -567,6 +586,11 @@ const getAllCloturedPannes = asyncErrorHandler(async (req, res, next) => {
                 model: Fournisseur,
                 as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
             
         ]
@@ -629,7 +653,7 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone'],
                 include: [
                     {
                         model: Family,
@@ -645,11 +669,6 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -667,6 +686,11 @@ const getAllCloturedPannesByAgent = asyncErrorHandler(async (req, res, next) => 
                 model: Fournisseur,
                 as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
             
         ]
@@ -715,7 +739,7 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone'],
                 include: [
                     {
                         model: Family,
@@ -731,11 +755,6 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -753,6 +772,11 @@ const getAllNoneDelivredPannes = asyncErrorHandler(async (req, res, next) => {
                 model: Fournisseur,
                 as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
             
         ]
@@ -815,7 +839,7 @@ const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next)
             {
                 model: Product,
                 as: 'productAssociation',
-                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone', 'arrival'],
+                attributes: ['marque', 'model', 'lot', 'tailleLot', 'family', 'zone'],
                 include: [
                     {
                         model: Family,
@@ -831,11 +855,6 @@ const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next)
                         model: Lot,
                         as: 'lotAssociation',
                         attributes: ['name']
-                    },
-                    {
-                        model: Arrival,
-                        as: 'arrivalAssociation',
-                        attributes: ['code', 'name']
                     }
                 ]
             },
@@ -853,6 +872,11 @@ const getAllNoneDelivredPannesByAgent = asyncErrorHandler(async (req, res, next)
                 model: Fournisseur,
                 as: 'fournisseurAssociation',
                 attributes: ['code', 'fullname'],
+            },
+            {
+                model: Arrival,
+                as: 'arrivalAssociation',
+                attributes: ['code', 'name']
             }
             
         ]
@@ -999,7 +1023,6 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
                 lot: existingLot.id,
                 family: existingFamily.id,
                 zone: existingWorkshop.zone,
-                arrival: existingArrival ? existingArrival.id : null
             }, { transaction });
 
             if (!product) return next(new CustomError('Un problème est survenu lors de la création d\'un produit, veuillez réessayer.', 400));
@@ -1021,7 +1044,8 @@ const firstPanneStep = asyncErrorHandler(async (req, res, next) => {
             agent: existingAgent.id,
             ligne,
             product: product.id,
-            workshop: existingWorkshop.id
+            workshop: existingWorkshop.id,
+            arrival: existingArrival ? existingArrival.id : null
         }, { transaction });
 
         if (!newPanne) return next(new CustomError('Un problème est survenu lors de la création d\'une panne, veuillez réessayer.', 400));
@@ -1485,7 +1509,7 @@ const updatePanne = asyncErrorHandler(async (req, res, next) => {
         if (!existingArrival) {
             return next(new CustomError('Arrivage non trouvé', 404));
         }
-        existingProduct.arrival = existingArrival.id;
+        existingPanne.arrival = existingArrival.id;
     }
     if (fournisseur) existingPanne.fournisseur = fournisseur;
     if (ligne) existingPanne.ligne = ligne;

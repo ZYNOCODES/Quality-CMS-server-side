@@ -198,6 +198,7 @@ const UpdateAgent = asyncErrorHandler(async (req, res, next) => {
 //delete specific user
 const DeleteAgent = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
+    
     //check if name is provided
     if(!code || validator.isEmpty(code)){
         return next(new CustomError('Tout les champs doivent être remplis', 400));

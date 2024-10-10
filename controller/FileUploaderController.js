@@ -79,16 +79,6 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
             continue;
         }
 
-        let existingArrival = null;
-        if(item.Arrivage){
-            // récupérer l'ID de l'arrivage à partir du nom de l'arrivage
-            existingArrival = await ArrivalService.findArrivalByName(item.Arrivage);
-            if(!existingArrival){
-                errorData.push({item, msg: 'Nom d\'arrivage invalide'});
-                continue;
-            }
-        }
-
         // vérifier si le produit existe
         const product = await ProductService.findProductByModelAndLot(item.Modele, existinglot.id);
         if(product){
@@ -112,7 +102,6 @@ const UploadProductXLSXFile = asyncErrorHandler(async (req, res, next) => {
             family: existingfamily.id,
             zone: existingzone.id,
             tailleLot: item.TailleLot,
-            arrival: existingArrival ? existingArrival.id : null
         });
         if(!newProduct){
             errorData.push({item, msg: 'Échec de la création du produit, veuillez réessayer.'});
