@@ -93,6 +93,10 @@ const Panne = sequelize.define('panne', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    origine: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     livraison:{
         type: DataTypes.BOOLEAN,
         defaultValue: false,

@@ -1157,13 +1157,13 @@ const secondPanneStep = asyncErrorHandler(async (req, res, next) => {
 // third panne step
 const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
     const { code } = req.params;
-    const { source, etat, agent } = req.body;
+    const { source, etat, origine, agent } = req.body;
     // Validate required fields
     if ([code, agent].some(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Tous les champs doivent être remplis', 400));
     }
     // Validate required fields
-    if ([source, etat].every(field => !field || validator.isEmpty(field.toString()))) {
+    if ([source, etat, origine].every(field => !field || validator.isEmpty(field.toString()))) {
         return next(new CustomError('Un des champs doivent être remplis', 400));
     }
 
@@ -1198,6 +1198,7 @@ const thirdPanneStep = asyncErrorHandler(async (req, res, next) => {
     //update the panne 
     if (source) existingPanne.source = source;
     if (etat) existingPanne.etat = etat;
+    if (origine) existingPanne.origine = origine;
     
     //save the updated panne
     const updatedPanne = await existingPanne.save();
@@ -1249,6 +1250,13 @@ const fourthPanneStep = asyncErrorHandler(async (req, res, next) => {
     const existingPanneType = await PanneTypeAssignmentService.findPanneTypeAssignmentByPanne(existingPanne.id);
     if(!existingPanneType){
         return next(new CustomError('Vous devez sélectionner au moins un type de panne', 400));
+    }
+
+    //check if the source/etat/origine is already have value
+    if(!existingPanne.source || !existingPanne.etat || !existingPanne.origine
+        || validator.isEmpty(existingPanne.source) || validator.isEmpty(existingPanne.etat) || validator.isEmpty(existingPanne.origine)
+    ){
+        return next(new CustomError('Vous devez remplir les informations de la panne (source, etat, origine)', 400));
     }
 
     //check if the panne is already have action corrective and consommation

@@ -9,7 +9,9 @@ const {
     CountTopPannes,
     CountTopActionsCorrectives,
     CountTopConsommations,
-    CountTopTechnicians
+    CountTopTechnicians,
+    CountTopSources,
+    CountTopOrigines,
 } = require('../controller/DashboardController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
@@ -42,5 +44,9 @@ router.get('/top/action', limiterForGet, checkAuthorization([process.env.MANAGER
 router.get('/top/consommation', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopConsommations);
 //top 5 technicians
 router.get('/top/technician', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopTechnicians);
+//top 5 sources
+router.get('/top/source', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopSources);
+//top 5 origines
+router.get('/top/origine', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopOrigines);
 
 module.exports = router;

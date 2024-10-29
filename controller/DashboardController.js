@@ -506,6 +506,53 @@ const CountTopTechnicians = asyncErrorHandler(async (req, res, next) => {
     // Return the result with formatted data
     res.status(200).json(formattedTechnicians);
 });
+//count top 5 sources
+const CountTopSources = asyncErrorHandler(async (req, res, next) => {
+    // Count top 5 sources by their "source" field
+    const topSources = await Panne.findAll({
+        attributes: [
+            'source',
+            [sequelize.fn('COUNT', sequelize.col('source')), 'count']
+        ],
+        where: {
+            source: { [Op.ne]: null }
+        },
+        group: ['source'],
+        order: [[sequelize.fn('COUNT', sequelize.col('source')), 'DESC']],
+        limit: 5
+    });
+
+    // Check if the top sources are valid
+    if (!topSources || topSources.length === 0) {
+        return next(new CustomError('Aucune source trouvée.', 404));
+    }
+    // Return the results
+    res.status(200).json(topSources);
+});
+//count top 5 origine
+const CountTopOrigines = asyncErrorHandler(async (req, res, next) => {
+    // Count top 5 origines by their "origine" field
+    const topOrigines = await Panne.findAll({
+        attributes: [
+            'origine',
+            [sequelize.fn('COUNT', sequelize.col('origine')), 'count']
+        ],
+        where: {
+            origine: { [Op.ne]: null }
+        },
+        group: ['origine'],
+        order: [[sequelize.fn('COUNT', sequelize.col('origine')), 'DESC']],
+        limit: 5
+    });
+
+    // Check if the top origines are valid
+    if (!topOrigines || topOrigines.length === 0) {
+        return next(new CustomError('Aucune origine trouvée.', 404));
+    }
+
+    // Return the results
+    res.status(200).json(topOrigines);
+});
 
 module.exports = {
     CountAllPannes,
@@ -516,5 +563,7 @@ module.exports = {
     CountTopPannes,
     CountTopActionsCorrectives,
     CountTopConsommations,
-    CountTopTechnicians
+    CountTopTechnicians,
+    CountTopSources,
+    CountTopOrigines
 };
