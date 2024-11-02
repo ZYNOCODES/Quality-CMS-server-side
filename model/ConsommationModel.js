@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
 const Piece = require('./PieceModel.js');
+const Panne = require('./PanneModel.js');
 
 const Consommation = sequelize.define('consommation', {
     id: {
@@ -42,6 +43,11 @@ const Consommation = sequelize.define('consommation', {
 Consommation.belongsTo(Piece, {
     foreignKey: 'piece',
     as: 'pieceAssociation'
+});
+
+Consommation.belongsTo(Panne, {
+    foreignKey: 'panne',
+    as: 'panneAssociation'
 });
 
 module.exports = Consommation;

@@ -12,6 +12,9 @@ const {
     CountTopTechnicians,
     CountTopSources,
     CountTopOrigines,
+    CountTopPannesBetweenSEDate,
+    CountTopActionsCorrectivesBetweenSEDate,
+    CountTopConsommationsBetweenSEDate,
 } = require('../controller/DashboardController.js');
 const requireAuth = require('../middleware/RequireAuth.js');
 const checkAuthorization = require('../middleware/Authorization.js');
@@ -38,10 +41,16 @@ router.get('/count', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE
 router.get('/month', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountPannesByMonth);
 //top 4 pannes
 router.get('/top/panne', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopPannes);
+//top 4 panne between start and end date
+router.get('/top/panne/count', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopPannesBetweenSEDate);
 //top 4 actions correctives
 router.get('/top/action', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopActionsCorrectives);
+//top 4 actions correctives between start and end date
+router.get('/top/action/count', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopActionsCorrectivesBetweenSEDate);
 //top 4 consommations
 router.get('/top/consommation', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopConsommations);
+//top 4 consommations between start and end date
+router.get('/top/consommation/count', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopConsommationsBetweenSEDate);
 //top 5 technicians
 router.get('/top/technician', limiterForGet, checkAuthorization([process.env.MANAGER_TYPE]), CountTopTechnicians);
 //top 5 sources

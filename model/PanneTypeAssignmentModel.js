@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
 const typePanne = require('./PanneTypeModel.js');
+const Panne = require('./PanneModel.js');
 
 const PanneTypeAssignment = sequelize.define('pannetypeassignment', {
     id: {
@@ -42,6 +43,11 @@ const PanneTypeAssignment = sequelize.define('pannetypeassignment', {
 PanneTypeAssignment.belongsTo(typePanne, {
     foreignKey: 'typepanne',
     as: 'typepanneAssociation'
+});
+
+PanneTypeAssignment.belongsTo(Panne, {
+    foreignKey: 'panne',
+    as: 'panneAssociation'
 });
 
 module.exports = PanneTypeAssignment;

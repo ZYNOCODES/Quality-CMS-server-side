@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
 const Action = require('./ActionModel.js');
+const Panne = require('./PanneModel.js');
 
 const Actioncorrective = sequelize.define('actioncorrective', {
     id: {
@@ -48,10 +49,14 @@ const Actioncorrective = sequelize.define('actioncorrective', {
     timestamps: false,
 });
 
-// Define associations
 Actioncorrective.belongsTo(Action, {
     foreignKey: 'action',
     as: 'actionAssociation'
+});
+
+Actioncorrective.belongsTo(Panne, {
+    foreignKey: 'panne',
+    as: 'panneAssociation'
 });
 
 module.exports = Actioncorrective;

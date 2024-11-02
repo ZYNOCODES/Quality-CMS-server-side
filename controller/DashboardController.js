@@ -371,6 +371,59 @@ const CountTopPannes = asyncErrorHandler(async (req, res, next) => {
     // Return the results
     res.status(200).json(topPannes);
 });
+//count top 4 pannes between start and end date
+const CountTopPannesBetweenSEDate = asyncErrorHandler(async (req, res, next) => {
+    const { start, end } = req.query;
+
+    // Parse the start and end dates using moment
+    const parsedStart = moment(start);
+    const parsedEnd = moment(end);
+
+    // Check if the dates are valid
+    if (!parsedStart.isValid() || !parsedEnd.isValid()) {
+        return next(new CustomError('Les dates de début et de fin doivent être valides', 400));
+    }
+
+    // Adjust dates to ignore the time part
+    const adjustedStart = parsedStart.startOf('day').toDate();
+    const adjustedEnd = parsedEnd.endOf('day').toDate();
+
+    // Count top 4 pannes by their "panne" field
+    const topPannes = await PanneTypeAssignment.findAll({
+        attributes: [
+            'typepanne',
+            [sequelize.fn('COUNT', sequelize.col('typepanne')), 'count']
+        ],
+        include: [
+            {
+                model: PanneType,
+                as: 'typepanneAssociation',
+                attributes: ['name'] 
+            },
+            {
+                model: Panne,
+                as: 'panneAssociation',
+                attributes: [],
+                where: {
+                    dateDeclaration: {
+                        [Op.between]: [adjustedStart, adjustedEnd]
+                    }
+                }
+            }
+        ],
+        group: ['typepanne'],
+        order: [[sequelize.fn('COUNT', sequelize.col('typepanne')), 'DESC']],
+        limit: 4
+    });
+
+    // Check if the top pannes are valid
+    if (!topPannes || topPannes.length === 0) {
+        return next(new CustomError('Aucune panne trouvée.', 404));
+    }
+
+    // Return the results
+    res.status(200).json(topPannes);
+});
 // count top 4 actions correctives
 const CountTopActionsCorrectives = asyncErrorHandler(async (req, res, next) => {
     // Count top 4 actions correctives by their "action" field and include the action name
@@ -399,6 +452,59 @@ const CountTopActionsCorrectives = asyncErrorHandler(async (req, res, next) => {
     // Return the results
     res.status(200).json(topActionsCorrectives);
 });
+//count top 4 actions correctives between start and end date 
+const CountTopActionsCorrectivesBetweenSEDate = asyncErrorHandler(async (req, res, next) => {
+    const { start, end } = req.query;
+
+    // Parse the start and end dates using moment
+    const parsedStart = moment(start);
+    const parsedEnd = moment(end);
+
+    // Check if the dates are valid
+    if (!parsedStart.isValid() || !parsedEnd.isValid()) {
+        return next(new CustomError('Les dates de début et de fin doivent être valides', 400));
+    }
+
+    // Adjust dates to ignore the time part
+    const adjustedStart = parsedStart.startOf('day').toDate();
+    const adjustedEnd = parsedEnd.endOf('day').toDate();
+
+    // Count top 4 actions correctives by their "action" field based on panne.dateDeclaration
+    const topActionsCorrectives = await ActionCorrective.findAll({
+        attributes: [
+            'action',
+            [sequelize.fn('COUNT', sequelize.col('action')), 'count']
+        ],
+        include: [
+            {
+                model: Action,
+                as: 'actionAssociation',
+                attributes: ['name', 'duree'] 
+            },
+            {
+                model: Panne,
+                as: 'panneAssociation',
+                attributes: [],
+                where: {
+                    dateDeclaration: {
+                        [Op.between]: [adjustedStart, adjustedEnd]
+                    }
+                }
+            }
+        ],
+        group: ['action', 'actionAssociation.id'],
+        order: [[sequelize.fn('COUNT', sequelize.col('action')), 'DESC']],
+        limit: 4
+    });
+
+    // Check if the top actions correctives are valid
+    if (!topActionsCorrectives || topActionsCorrectives.length === 0) {
+        return next(new CustomError('Aucune action corrective trouvée.', 404));
+    }
+
+    // Return the results
+    res.status(200).json(topActionsCorrectives);
+});
 // count top 4 consommations
 const CountTopConsommations = asyncErrorHandler(async (req, res, next) => {
     // Count top 4 consommations by their "piece" field
@@ -412,6 +518,59 @@ const CountTopConsommations = asyncErrorHandler(async (req, res, next) => {
                 model: Piece,
                 as: 'pieceAssociation',
                 attributes: ['name']
+            }
+        ],
+        group: ['piece', 'pieceAssociation.id'],
+        order: [[sequelize.fn('COUNT', sequelize.col('piece')), 'DESC']],
+        limit: 4
+    });
+
+    // Check if the top consommations are valid
+    if (!topConsommations || topConsommations.length === 0) {
+        return next(new CustomError('Aucune consommation trouvée.', 404));
+    }
+
+    // Return the results
+    res.status(200).json(topConsommations);
+});
+// count top 4 consommations between start and end date
+const CountTopConsommationsBetweenSEDate = asyncErrorHandler(async (req, res, next) => {
+    const { start, end } = req.query;
+
+    // Parse the start and end dates using moment
+    const parsedStart = moment(start);
+    const parsedEnd = moment(end);
+
+    // Check if the dates are valid
+    if (!parsedStart.isValid() || !parsedEnd.isValid()) {
+        return next(new CustomError('Les dates de début et de fin doivent être valides', 400));
+    }
+
+    // Adjust dates to ignore the time part
+    const adjustedStart = parsedStart.startOf('day').toDate();
+    const adjustedEnd = parsedEnd.endOf('day').toDate();
+
+    // Count top 4 consommations by their "piece" field based on panne.dateDeclaration
+    const topConsommations = await Consommation.findAll({
+        attributes: [
+            'piece',
+            [sequelize.fn('COUNT', sequelize.col('piece')), 'count']
+        ],
+        include: [
+            {
+                model: Piece,
+                as: 'pieceAssociation',
+                attributes: ['name']
+            },
+            {
+                model: Panne,
+                as: 'panneAssociation',
+                attributes: [],
+                where: {
+                    dateDeclaration: {
+                        [Op.between]: [adjustedStart, adjustedEnd]
+                    }
+                }
             }
         ],
         group: ['piece', 'pieceAssociation.id'],
@@ -565,5 +724,8 @@ module.exports = {
     CountTopConsommations,
     CountTopTechnicians,
     CountTopSources,
-    CountTopOrigines
+    CountTopOrigines,
+    CountTopPannesBetweenSEDate,
+    CountTopActionsCorrectivesBetweenSEDate,
+    CountTopConsommationsBetweenSEDate
 };
